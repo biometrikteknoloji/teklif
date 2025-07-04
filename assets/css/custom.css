@@ -1,0 +1,272 @@
+/* =================================================================
+   1. TASARIM SİSTEMİ (STİL REHBERİ)
+================================================================= */
+:root {
+    --primary-color: #2c3e50;      /* Ana Renk: Koyu Mavi-Gri */
+    --accent-color: #3498db;       /* Vurgu Rengi: Canlı Mavi */
+    --success-color: #27ae60;      /* Başarı Rengi: Yeşil */
+    --danger-color: #c0392b;       /* Hata Rengi: Kırmızı */
+    --bg-light: #ecf0f1;           /* Sayfa Arka Plan Rengi */
+    --text-dark: #34495e;          /* Ana Metin Rengi */
+    --border-color: #bdc3c7;       /* Kenarlık Rengi */
+
+    --font-family-main: 'Poppins', sans-serif;
+    --border-radius: 8px;
+    --box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+/* =================================================================
+   2. LOGIN SAYFASI STİLLERİ
+================================================================= */
+body {
+    font-family: var(--font-family-main);
+    background-color: var(--bg-light);
+}
+
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+.login-card {
+    width: 100%;
+    max-width: 400px;
+    padding: 40px 30px;
+    background-color: #ffffff;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    text-align: center;
+}
+.login-card .logo {
+    margin-bottom: 25px;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+.login-card h2 {
+    font-size: 20px;
+    color: var(--text-dark);
+    margin-bottom: 25px;
+    font-weight: 400;
+}
+
+/* Genel form elemanları */
+.form-control {
+    height: 42px !important;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    padding: 0 15px;
+}
+.form-control:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2) !important;
+}
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    transition: all 0.2s ease;
+}
+.btn-primary:hover {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+/* =================================================================
+   3. ANA PANEL (DASHBOARD) YERLEŞİMİ VE STİLLERİ
+================================================================= */
+.main-wrapper {
+    display: flex;
+}
+
+/* Sol Menü (Sidebar) */
+.sidebar {
+    width: 250px;
+    height: 100vh;
+    background-color: var(--primary-color);
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    position: fixed; /* Sayfa kaysa bile sabit kalır */
+    top: 0;
+    left: 0;
+    z-index: 1000;
+}
+.sidebar-header {
+    padding: 22px 25px;
+    font-size: 24px;
+    font-weight: 700;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.2);
+    letter-spacing: 1px;
+}
+.sidebar-header a { color: #ffffff; text-decoration: none; }
+
+.sidebar-menu {
+    list-style: none;
+    padding: 10px 0;
+    margin: 0;
+    flex-grow: 1; /* Üst menünün kalan boşluğu doldurmasını sağlar */
+}
+.sidebar-menu li a {
+    display: flex;
+    align-items: center;
+    padding: 13px 25px;
+    color: #bdc3c7;
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+}
+.sidebar-menu li a:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+    color: #ffffff;
+}
+.sidebar-menu li.active a {
+    background-color: var(--accent-color);
+    color: #ffffff;
+    font-weight: 500;
+}
+
+.sidebar-bottom-section {
+    padding-bottom: 20px; /* Alttaki elemanlar için boşluk */
+}
+.sidebar-footer {
+    padding: 0 20px;
+}
+
+.logout-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 12px;
+    background-color: var(--danger-color);
+    color: #ffffff;
+    text-decoration: none;
+    border-radius: var(--border-radius);
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+.logout-button:hover {
+    background-color: #e74c3c;
+}
+
+/* Ana İçerik Alanı */
+.main-content {
+    margin-left: 250px; /* Sidebar genişliği kadar soldan boşluk bırak */
+    width: calc(100% - 250px); /* Kalan tüm genişliği kapla */
+    padding: 20px;
+}
+
+.topbar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    background-color: #ffffff;
+    padding: 15px 25px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    margin-bottom: 25px;
+}
+.user-info { font-weight: 500; color: var(--text-dark); }
+
+.page-content {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    min-height: 80vh;
+}
+.page-content h1 {
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--bg-light);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+/* =================================================================
+   4. TABLO İŞLEM BUTONLARI
+================================================================= */
+.action-buttons .action-icon {
+    margin: 0 4px; /* Butonların sağına ve soluna boşluk ver */
+}
+.action-icon {
+    background-color: transparent !important;
+    border: none !important;
+    padding: 5px;
+    line-height: 1;
+}
+.action-icon i {
+    font-size: 1.1rem;
+    transition: transform 0.2s ease-in-out;
+}
+.action-icon:hover {
+    background-color: #e9ecef !important;
+    border-radius: 50%;
+}
+.action-icon:hover i {
+    transform: scale(1.2);
+}
+
+/* =================================================================
+   5. TEKLİF OLUŞTURMA SAYFASI ESTETİK İYİLEŞTİRMELERİ
+================================================================= */
+.select2-container .select2-selection--single {
+    height: 42px !important;
+    line-height: 42px;
+}
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 40px !important;
+    padding-left: 15px !important;
+}
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 40px !important;
+}
+
+#teklifKalemleri .form-control,
+#teklifKalemleri .select2-container .select2-selection--single {
+    height: 38px !important;
+    font-size: 0.9rem;
+}
+#teklifKalemleri .select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 36px !important;
+    padding-left: 10px !important;
+}
+#teklifKalemleri .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 36px !important;
+}
+#teklifKalemleri .btn-sm {
+    padding: 0.25rem 0.6rem;
+}
+
+.totals-table th, .totals-table td {
+    padding: 0.9rem 0.75rem;
+    border: none;
+}
+.totals-table th {
+    color: var(--text-dark);
+    font-weight: 500;
+    text-align: right;
+    width: 60%;
+}
+.totals-table td {
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+.grand-total-row th,
+.grand-total-row td {
+    font-size: 1.5rem !important;
+    color: var(--primary-color);
+    border-top: 2px solid var(--bg-light);
+    padding-top: 1rem;
+}
+
+#kdvOrani {
+    font-weight: bold;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+.totals-table th .input-group {
+    vertical-align: middle;
+}
