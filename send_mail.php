@@ -18,10 +18,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $to_email = $_POST['to_email'];
     $subject = $_POST['subject'];
     $body = nl2br(htmlspecialchars($_POST['body']));
-    $signature = $_POST['signature'] ?? '';
 
-    // --- PDF'i merkezi fonksiyondan oluştur ---
-    $pdf_content = generate_proposal_pdf($pdo, $proposal_id);
+    // --- DEĞİŞİKLİK BURADA BAŞLIYOR ---
+
+    // 1. TÜM ayarları tek seferde çekiyoruz (mail, imza, renk hepsi için)
+    $settings_all = $pdo->query("SELECT setting_key, setting_value FROM settings")->fetchAll(PDO::FETCH_KEY_PAIR);
+    
+    // 2. İmzayı ve Rengi değişkenlere atıyoruz
+    $signature = $settings_all['mail_signature_html'] ?? '';
+    $theme_color = $settings_all['proposal_theme_color'] ?? '#004a99';
+
+    // 3. PDF'i oluştururken renk bilgisini de fonksiyona gönderiyoruz
+    $pdf_content = generate_proposal_pdf($pdo, $proposal_id, $theme_color);
+
+    // --- DEĞİŞİKLİK BURADA BİTİYOR ---
+
     if (!$pdf_content) {
         echo json_encode(['success' => false, 'message' => 'PDF oluşturulurken bir hata oluştu.']);
         exit;
@@ -33,21 +44,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $dosya_adi = 'Teklif-' . str_replace('/', '-', $proposal_no) . '.pdf';
     
     // --- Maili Gönder ---
-    $settings = $pdo->query("SELECT setting_key, setting_value FROM settings WHERE setting_key LIKE 'mail_%'")->fetchAll(PDO::FETCH_KEY_PAIR);
-    
+    // Mail ayarlarını $settings_all dizisinden alıyoruz
     $mail = new PHPMailer(true);
     try {
-        // ... (Tüm mail ayarları...)
         $mail->isSMTP();
-        $mail->Host       = $settings['mail_host'];
+        $mail->Host       = $settings_all['mail_host'] ?? '';
         $mail->SMTPAuth   = true;
-        $mail->Username   = $settings['mail_username'];
-        $mail->Password   = $settings['mail_password'];
-        $mail->SMTPSecure = $settings['mail_security'] == 'none' ? '' : $settings['mail_security'];
-        $mail->Port       = (int)$settings['mail_port'];
+        $mail->Username   = $settings_all['mail_username'] ?? '';
+        $mail->Password   = $settings_all['mail_password'] ?? '';
+        $mail->SMTPSecure = ($settings_all['mail_security'] ?? 'tls') == 'none' ? '' : ($settings_all['mail_security'] ?? 'tls');
+        $mail->Port       = (int)($settings_all['mail_port'] ?? 587);
         $mail->CharSet    = 'UTF-8';
 
-        $mail->setFrom($settings['mail_from_address'], $settings['mail_from_name']);
+        $mail->setFrom($settings_all['mail_from_address'] ?? '', $settings_all['mail_from_name'] ?? '');
         $mail->addAddress($to_email);
         $mail->addStringAttachment($pdf_content, $dosya_adi);
 
@@ -59,8 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         $mail->send();
 
-        // ---- DÜZELTME BURADA ----
-        // Mail başarıyla gönderildikten hemen sonra veritabanını güncelle.
+        // Veritabanını güncelle
         $update_stmt = $pdo->prepare("UPDATE proposals SET is_sent_by_mail = 1, mail_sent_at = NOW() WHERE id = ?");
         $update_stmt->execute([$proposal_id]);
         
@@ -72,3 +80,4 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 
 echo json_encode($response);
+?>

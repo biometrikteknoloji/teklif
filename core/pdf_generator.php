@@ -11,7 +11,7 @@ if (!function_exists('generate_proposal_pdf')) {
      * @param int $proposal_id Oluşturulacak teklifin ID'si
      * @return string|null PDF içeriği veya hata durumunda null
      */
-    function generate_proposal_pdf($pdo, $proposal_id) {
+    function generate_proposal_pdf($pdo, $proposal_id, $theme_color = '#004a99') {
         
         // Projenin kök dizinini tanımla
         if (!defined('PROJECT_ROOT')) {

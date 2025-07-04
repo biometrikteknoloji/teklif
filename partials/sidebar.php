@@ -31,6 +31,19 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <div class="sidebar-bottom-menu">
         <?php if ($_SESSION['user_role_id'] == 1): // Sadece Admin görebilir ?>
         <ul class="sidebar-menu">
+            
+            <!-- === YENİ KULLANICI YÖNETİMİ MENÜSÜ === -->
+            <?php 
+                // Kullanıcı ile ilgili sayfalarda bu menünün aktif olması için bir dizi tanımlıyoruz
+                $user_pages = ['kullanici_listesi.php', 'kullanici_form.php'];
+            ?>
+            <li class="<?php echo (in_array($current_page, $user_pages)) ? 'active' : ''; ?>">
+                <a href="kullanici_listesi.php">
+                    <i class="fas fa-users-cog me-2"></i>Kullanıcılar
+                </a>
+            </li>
+            <!-- === YENİ MENÜ SONU === -->
+
             <li class="<?php echo ($current_page == 'ayarlar.php') ? 'active' : ''; ?>">
                 <a href="ayarlar.php">
                     <i class="fas fa-cog me-2"></i>Ayarlar

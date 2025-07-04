@@ -20,17 +20,49 @@
     ================================================================== -->
     
     <?php 
-    // Sadece teklif oluşturma veya düzenleme sayfasındaysak bu script'i yükle
+    // Mevcut sayfanın adını alıyoruz
     $currentPage = basename($_SERVER['PHP_SELF']);
-    if ($currentPage == 'teklif_olustur.php' || $currentPage == 'teklif_revize_et.php'): 
+    
+    // --- TEKLİF LİSTESİ SAYFASINA ÖZEL SCRIPT ---
+    if ($currentPage == 'teklif_listesi.php'): 
+    ?>
+    <script>
+    $(document).ready(function(){
+        $("#proposalSearchInput").on("keyup", function() {
+            var value = $(this).val().toLocaleLowerCase('tr-TR');
+            $("#proposalsTable tbody tr").filter(function() {
+                if ($(this).find('td[colspan="7"]').length > 0) { return false; }
+                var rowText = $(this).text().toLocaleLowerCase('tr-TR');
+                $(this).toggle(rowText.indexOf(value) > -1);
+            });
+        });
+    });
+    </script>
+    <?php 
+    // --- TEKLİF OLUŞTURMA/DÜZENLEME SAYFALARINA ÖZEL SCRIPT (BİRLEŞTİRİLMİŞ) ---
+    elseif ($currentPage == 'teklif_olustur.php' || $currentPage == 'teklif_revize_et.php'): 
     ?>
     <script>
     $(document).ready(function() {
+        // Müşteri verilerini PHP'den alıyoruz (teklif_olustur.php'de tanımlanmıştı)
+        var customersData = <?php echo json_encode($customers ?? []); ?>;
+
+        // Müşteri seçildiğinde "Kime" alanını doldur
         $('#customer_id').select2({
             placeholder: "Müşteri arayın...",
-            data: <?php echo json_encode($customers ?? []); ?>
+            data: customersData
+        }).on('select2:select', function (e) {
+            var data = e.params.data;
+            // PHP'den gelen tüm müşteri verileri içinde seçileni bul
+            var selectedCustomer = customersData.find(c => c.id == data.id);
+            if (selectedCustomer && selectedCustomer.yetkili_ismi) {
+                $('#contact_person').val(selectedCustomer.yetkili_ismi);
+            } else {
+                $('#contact_person').val(''); // Eğer yetkili ismi yoksa alanı boşalt
+            }
         });
 
+        // --- SENİN ÇALIŞAN KODUNUN TAMAMI BURADA ---
         function addProductRow() {
             var rowCount = $('#teklifKalemleri tbody tr').length;
             var newRow = `
@@ -130,7 +162,7 @@
     <?php endif; ?>
     
     
-    <!-- Bootstrap İpucu Balonlarını (Tooltips) Aktif Etme Scripti -->
+    <!-- Bootstrap İpucu Balonlarını (Tooltips) Aktif Etme Scripti (Tüm sayfalarda çalışır) -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))

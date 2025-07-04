@@ -3,6 +3,7 @@ session_start();
 if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit(); }
 require 'config/database.php';
 
+// Veritabanı sorgusu - Değişiklik yok
 $sql = "SELECT p.id, p.proposal_no, p.proposal_date, p.grand_total, p.currency, p.is_sent_by_mail, p.mail_sent_at, c.unvan, ps.status_name, ps.id as status_id, u.full_name as user_name, (SELECT COUNT(*) FROM proposals r WHERE r.original_proposal_id = p.id) as revision_count FROM proposals p JOIN customers c ON p.customer_id = c.id JOIN proposal_statuses ps ON p.status_id = ps.id JOIN users u ON p.user_id = u.id WHERE p.original_proposal_id IS NULL";
 $params = [];
 if ($_SESSION['user_role_id'] != 1) { $sql .= " AND p.user_id = ?"; $params[] = $_SESSION['user_id']; }
@@ -24,8 +25,21 @@ include 'partials/header.php';
                 <h1>Gönderilen Teklifler</h1>
                 <a href="teklif_olustur.php" class="btn btn-success"><i class="fas fa-plus me-2"></i>Yeni Teklif Oluştur</a>
             </div>
+
+            <!-- === YENİ ARAMA KUTUSU === -->
+            <div class="row mb-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="input-group">
+                        <span class="input-group-text" id="search-icon"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control" id="proposalSearchInput" placeholder="Teklif no veya müşteri adıyla ara...">
+                    </div>
+                </div>
+            </div>
+            <!-- === YENİ ARAMA KUTUSU SONU === -->
+
             <div class="table-responsive">
-                <table class="table table-striped table-hover align-middle">
+                <!-- === TABLOYA ID EKLENDİ === -->
+                <table class="table table-striped table-hover align-middle" id="proposalsTable">
                     <thead class="table-dark">
                         <tr>
                             <th style="min-width: 150px;">Teklif No</th>
@@ -74,12 +88,20 @@ include 'partials/header.php';
                                             <i class="fas fa-times-circle text-muted fs-5" data-bs-toggle="tooltip" title="Mail Gönderilmedi"></i>
                                         <?php endif; ?>
                                     </td>
-                                    <td class="text-center action-buttons">
-                                        <a href="teklif_view.php?id=<?php echo $teklif['id']; ?>" class="action-icon" data-bs-toggle="tooltip" title="Görüntüle/Gönder"><i class="fas fa-envelope text-info"></i></a>
-                                        <a href="teklif_revize_et.php?id=<?php echo $teklif['id']; ?>" class="action-icon" data-bs-toggle="tooltip" title="Revize Et"><i class="fas fa-history text-success"></i></a>
-                                        <?php if ($_SESSION['user_role_id'] == 1): ?>
-                                            <a href="teklif_sil.php?id=<?php echo $teklif['id']; ?>" class="action-icon" onclick="return confirm('Bu teklifi ve tüm revizyonlarını silmek istediğinizden emin misiniz?');" data-bs-toggle="tooltip" title="Sil"><i class="fas fa-trash-alt text-danger"></i></a>
-                                        <?php endif; ?>
+                                   <td class="action-buttons">
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <a href="teklif_view.php?id=<?php echo $teklif['id']; ?>" class="action-icon" data-bs-toggle="tooltip" title="Görüntüle/Gönder">
+                                                <i class="fas fa-envelope text-info fs-5"></i>
+                                            </a>
+                                            <a href="teklif_revize_et.php?id=<?php echo $teklif['id']; ?>" class="action-icon" data-bs-toggle="tooltip" title="Revize Et">
+                                                <i class="fas fa-history text-success fs-5"></i>
+                                            </a>
+                                            <?php if ($_SESSION['user_role_id'] == 1): ?>
+                                                <a href="teklif_sil.php?id=<?php echo $teklif['id']; ?>" class="action-icon" onclick="return confirm('Bu teklifi ve tüm revizyonlarını silmek istediğinizden emin misiniz?');" data-bs-toggle="tooltip" title="Sil">
+                                                    <i class="fas fa-trash-alt text-danger fs-5"></i>
+                                                </a>
+                                            <?php endif; ?>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -92,4 +114,31 @@ include 'partials/header.php';
         </div>
     </div>
 </div>
+
+<!-- === YENİ JAVASCRIPT KODU === -->
+<script>
+$(document).ready(function(){
+    // Arama kutusuna her tuşa basıldığında bu fonksiyon çalışacak
+    $("#proposalSearchInput").on("keyup", function() {
+        var value = $(this).val().toLowerCase(); // Aranan kelimeyi al ve küçük harfe çevir
+        
+        // Tablonun tbody'sindeki tüm satırlarda (tr) döngü kur
+        $("#proposalsTable tbody tr").filter(function() {
+            // "Gösterilecek teklif bulunmuyor." satırını her zaman atla
+            if ($(this).find('td[colspan="7"]').length > 0) {
+                return false; // Bu satırı filtreleme dışında tut
+            }
+
+            // Mevcut satırın içeriğini al ve küçük harfe çevir
+            var rowText = $(this).text().toLowerCase();
+            
+            // Satırın içeriği, aranan kelimeyi içeriyor mu diye bak
+            // İçermiyorsa gizle, içeriyorsa göster
+            $(this).toggle(rowText.indexOf(value) > -1);
+        });
+    });
+});
+</script>
+<!-- === YENİ JAVASCRIPT KODU SONU === -->
+
 <?php include 'partials/footer.php'; ?>
