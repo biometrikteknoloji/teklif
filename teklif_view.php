@@ -22,7 +22,6 @@ if (!$teklif_versiyonlari) {
     exit();
 }
 
-// === DÜZELTME BURADA: EKSİK OLAN { PARANTEZİ EKLENDİ ===
 foreach ($teklif_versiyonlari as $key => $versiyon) {
     $stmt_items = $pdo->prepare("SELECT pi.*, pr.fotograf_yolu FROM proposal_items pi LEFT JOIN products pr ON pi.product_id = pr.id WHERE pi.proposal_id = ? ORDER BY pi.id ASC");
     $stmt_items->execute([$versiyon['id']]);
@@ -52,13 +51,17 @@ include 'partials/header.php';
                 <?php foreach ($teklif_versiyonlari as $index => $versiyon): ?>
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="heading<?php echo $versiyon['id']; ?>">
+                            <!-- === DÜZELTİLMİŞ AKORDİYON BAŞLIĞI === -->
                             <button class="accordion-button <?php echo $index > 0 ? 'collapsed' : ''; ?>" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<?php echo $versiyon['id']; ?>" aria-expanded="<?php echo $index == 0 ? 'true' : 'false'; ?>">
-                                <span class="badge bg-<?php echo $versiyon['revision_number'] > 0 ? 'warning text-dark' : 'primary'; ?> me-3">
+                                
+                                <span class="badge <?php echo $versiyon['revision_number'] > 0 ? 'bg-warning text-dark' : 'bg-primary'; ?> me-3">
                                     <?php echo $versiyon['revision_number'] > 0 ? 'Revizyon ' . $versiyon['revision_number'] : 'Orijinal Teklif'; ?>
                                 </span>
+                                
                                 <?php echo htmlspecialchars($versiyon['proposal_no']); ?>
                                 <span class="ms-auto text-muted small">Tarih: <?php echo date('d.m.Y', strtotime($versiyon['proposal_date'])); ?></span>
                             </button>
+                            <!-- === BAŞLIK SONU === -->
                         </h2>
                         <div id="collapse<?php echo $versiyon['id']; ?>" class="accordion-collapse collapse <?php echo $index == 0 ? 'show' : ''; ?>" data-bs-parent="#teklifGecmisi">
                             <div class="accordion-body">
@@ -98,44 +101,68 @@ include 'partials/header.php';
                                                 </td>
                                                 <td><?php echo htmlspecialchars($item['product_name']); ?></td>
                                                 <td class="text-center"><?php echo $item['quantity']; ?></td>
-                                                <td class="text-end"><?php echo number_format($item['unit_price'], 2, ',', '.') . ' ' . $versiyon['currency']; ?></td>
+                                                <td class="text-end"><?php echo number_format($item['unit_price'], 2, ',', '.'); ?> <?php echo $versiyon['currency']; ?></td>
                                                 <td class="text-center"><?php echo $item['discount_percent']; ?> %</td>
-                                                <td class="text-end fw-bold"><?php echo number_format($item['total_price'], 2, ',', '.') . ' ' . $versiyon['currency']; ?></td>
+                                                <td class="text-end fw-bold"><?php echo number_format($item['total_price'], 2, ',', '.'); ?> <?php echo $versiyon['currency']; ?></td>
                                             </tr>
                                         <?php endforeach; ?>
                                     </tbody>
                                 </table>
 
-                                <div class="row justify-content-end mt-3">
-                                    <div class="col-md-5">
-                                        <table class="table">
-                                            <tbody>
-                                                <tr>
-                                                    <th class="text-end">Ara Toplam:</th>
-                                                    <td class="text-end"><?php echo number_format($versiyon['sub_total'], 2, ',', '.'); ?> <?php echo $versiyon['currency']; ?></td>
-                                                </tr>
-                                                
-                                                <?php if (isset($versiyon['total_discount']) && (float)$versiyon['total_discount'] > 0): ?>
-                                                    <tr>
-                                                        <th class="text-end">İskonto Toplamı:</th>
-                                                        <td class="text-end text-danger">(<?php echo number_format($versiyon['total_discount'], 2, ',', '.'); ?>) <?php echo $versiyon['currency']; ?></td>
-                                                    </tr>
-                                                <?php endif; ?>
+                                <!-- Toplamlar Bölümü (Kutu Tasarımlı Hali) -->
+                               <!-- Toplamlar Bölümü (İskonto Kontrollü Kutu Tasarımı) -->
+<div class="row justify-content-end mt-4">
+    <div class="col-md-6 col-lg-5">
+        <ul class="list-group">
 
-                                                <tr>
-                                                    <th class="text-end">KDV (%<?php echo number_format($versiyon['tax_rate'], 0); ?>):</th>
-                                                    <td class="text-end"><?php echo number_format($versiyon['tax_amount'], 2, ',', '.'); ?> <?php echo $versiyon['currency']; ?></td>
-                                                </tr>
-                                                <tr class="fs-5 fw-bold border-top">
-                                                    <th class="text-end">Genel Toplam:</th>
-                                                    <td class="text-end"><?php echo number_format($versiyon['grand_total'], 2, ',', '.'); ?> <?php echo $versiyon['currency']; ?></td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+            <?php
+            // Önce hesaplamaları yapalım
+            $sub_total_calc = (float)($versiyon['sub_total'] ?? 0);
+            $total_discount_calc = (float)($versiyon['total_discount'] ?? 0);
+            $net_total_calc = $sub_total_calc - $total_discount_calc;
+
+            // İskonto var mı?
+            if ($total_discount_calc > 0):
+                // === İSKONTO VARSA GÖSTERİLECEK YAPI ===
+                $discount_percentage_calc = ($sub_total_calc > 0) ? ($total_discount_calc / $sub_total_calc) * 100 : 0;
+            ?>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <strong>TOPLAM:</strong>
+                    <span class="fw-bold"><?php echo number_format($sub_total_calc, 2, ',', '.'); ?> <?php echo $versiyon['currency']; ?></span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center text-danger">
+                    <strong>İSKONTO:</strong>
+                    <span class="fw-bold">
+                        <?php 
+                            $discount_text = '%' . number_format($discount_percentage_calc, 2, ',', '.');
+                            $discount_text .= ' (' . number_format($total_discount_calc, 2, ',', '.') . ' ' . $versiyon['currency'] . ')';
+                            echo $discount_text;
+                        ?>
+                    </span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <strong>ARA TOPLAM:</strong>
+                    <span class="fw-bold"><?php echo number_format($net_total_calc, 2, ',', '.'); ?> <?php echo $versiyon['currency']; ?></span>
+                </li>
+            <?php else: ?>
+                <!-- === İSKONTO YOKSA GÖSTERİLECEK YAPI === -->
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <strong>ARA TOPLAM:</strong>
+                    <span class="fw-bold"><?php echo number_format($sub_total_calc, 2, ',', '.'); ?> <?php echo $versiyon['currency']; ?></span>
+                </li>
+            <?php endif; ?>
+
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <strong>K.D.V. (%<?php echo number_format($versiyon['tax_rate'], 0); ?>):</strong>
+                <span class="fw-bold"><?php echo number_format($versiyon['tax_amount'], 2, ',', '.'); ?> <?php echo $versiyon['currency']; ?></span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center list-group-item-dark">
+                <strong class="fs-5">G.TOPLAM:</strong>
+                <span class="fs-5 fw-bolder"><?php echo number_format($versiyon['grand_total'], 2, ',', '.'); ?> <?php echo $versiyon['currency']; ?></span>
+            </li>
+        </ul>
+    </div>
+</div>
                     </div>
                 <?php endforeach; ?>
             </div>

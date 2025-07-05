@@ -156,13 +156,14 @@ include 'partials/header.php';
                                 <span id="toplamBrut" class="fw-bold">0.00</span>
                             </div>
                             <div class="d-flex justify-content-between align-items-center mb-2 discount-row d-none">
-                                <span class="text-danger">İSKONTO</span>
-                                <div class="input-group" style="width: 180px;">
-                                    <input type="number" class="form-control form-control-sm" id="genelIskontoYuzde" placeholder="%">
-                                    <span class="input-group-text p-1">%</span>
-                                    <input type="number" class="form-control form-control-sm" id="genelIskontoTutar" name="genelIskontoTutar" placeholder="Tutar">
-                                </div>
-                            </div>
+    <span class="text-danger">İSKONTO</span>
+    <div class="input-group" style="width: 180px;">
+        <!-- === DEĞİŞİKLİK BURADA: ONDALIKLI SAYILARA İZİN VER === -->
+        <input type="number" class="form-control form-control-sm" id="genelIskontoYuzde" placeholder="%" step="0.01">
+        <span class="input-group-text p-1">%</span>
+        <input type="number" class="form-control form-control-sm" id="genelIskontoTutar" name="genelIskontoTutar" placeholder="Tutar" step="0.01">
+    </div>
+</div>
                             <hr class="my-2 discount-related d-none">
                             
                             <!-- Bu satır her zaman görünür -->

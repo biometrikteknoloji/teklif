@@ -154,32 +154,51 @@ ob_start();
         </table>
         
 <div class="totals-section clearfix">
-    <table class="totals-table">
-        <tr>
-            <td>Ara Toplam:</td>
-            <td><?php echo number_format($teklif['sub_total'], 2, ',', '.'); ?> <?php echo $teklif['currency']; ?></td>
-        </tr>
+    <table class="totals-table" style="border: 1px solid #dee2e6;">
+        <?php
+        $sub_total_calc = (float)($teklif['sub_total'] ?? 0);
+        $total_discount_calc = (float)($teklif['total_discount'] ?? 0);
         
-        <?php 
-        // --- YENİ VE DAHA GÜVENLİ KONTROL ---
-        // 1. Değerin var ve sayısal olduğundan emin ol.
-        // 2. Değeri iki ondalık basamağa yuvarla (örn: 0.004 -> 0.00).
-        // 3. Sadece sonuç 0.01'den BÜYÜKSE satırı göster.
-        if (isset($teklif['total_discount']) && is_numeric($teklif['total_discount']) && round((float)$teklif['total_discount'], 2) > 0): 
+        if ($total_discount_calc > 0):
+            $net_total_calc = $sub_total_calc - $total_discount_calc;
+            $discount_percentage_calc = (float)($teklif['discount_percentage'] ?? (($sub_total_calc > 0) ? ($total_discount_calc / $sub_total_calc) * 100 : 0));
         ?>
-            <tr>
-                <td>İndirim Toplamı:</td>
-                <td>- <?php echo number_format($teklif['total_discount'], 2, ',', '.'); ?> <?php echo $teklif['currency']; ?></td>
+            <!-- TOPLAM (Sadece İskonto Varsa Görünür) -->
+            <tr style="background-color: #f8f9fa;">
+                <td style="text-align: right; font-weight: bold; width: 65%; border-bottom: 1px solid #dee2e6; padding: 6px;">TOPLAM:</td>
+                <td style="text-align: right; width: 35%; border-bottom: 1px solid #dee2e6; padding: 6px;"><?php echo number_format($sub_total_calc, 2, ',', '.'); ?> <?php echo $teklif['currency']; ?></td>
+            </tr>
+            <!-- İSKONTO (Sadece İskonto Varsa Görünür) - GÜNCELLENDİ -->
+            <tr style="background-color: #f8f9fa; color: #dc3545;">
+                <td style="text-align: right; font-weight: bold; border-bottom: 1px solid #dee2e6; padding: 6px;">İSKONTO (%<?php echo number_format($discount_percentage_calc, 2, ',', '.'); ?>):</td>
+                <td style="text-align: right; border-bottom: 1px solid #dee2e6; padding: 6px;">
+                    (<?php echo number_format($total_discount_calc, 2, ',', '.'); ?> <?php echo $teklif['currency']; ?>)
+                </td>
+            </tr>
+            <!-- ARA TOPLAM (Sadece İskonto Varsa Görünür) -->
+            <tr style="background-color: #f8f9fa;">
+                <td style="text-align: right; font-weight: bold; border-bottom: 1px solid #dee2e6; padding: 6px; padding-top: 10px;">ARA TOPLAM:</td>
+                <td style="text-align: right; border-bottom: 1px solid #dee2e6; padding: 6px; padding-top: 10px;">
+                    <?php echo number_format($net_total_calc, 2, ',', '.'); ?> <?php echo $teklif['currency']; ?>
+                </td>
+            </tr>
+        <?php else: ?>
+            <!-- İSKONTO YOKSA GÖSTERİLECEK YAPI -->
+            <tr style="background-color: #f8f9fa;">
+                <td style="text-align: right; font-weight: bold; width: 65%; border-bottom: 1px solid #dee2e6; padding: 6px;">ARA TOPLAM:</td>
+                <td style="text-align: right; width: 35%; border-bottom: 1px solid #dee2e6; padding: 6px;"><?php echo number_format($sub_total_calc, 2, ',', '.'); ?> <?php echo $teklif['currency']; ?></td>
             </tr>
         <?php endif; ?>
-        
-        <tr>
-            <td>KDV (%<?php echo number_format($teklif['tax_rate'], 0); ?>):</td>
-            <td><?php echo number_format($teklif['tax_amount'], 2, ',', '.'); ?> <?php echo $teklif['currency']; ?></td>
+
+        <!-- KDV (Her Zaman Görünür) -->
+        <tr style="background-color: #f8f9fa;">
+            <td style="text-align: right; font-weight: bold; border-bottom: 1px solid #dee2e6; padding: 6px;">K.D.V. (%<?php echo number_format($teklif['tax_rate'], 0); ?>):</td>
+            <td style="text-align: right; border-bottom: 1px solid #dee2e6; padding: 6px;"><?php echo number_format($teklif['tax_amount'], 2, ',', '.'); ?> <?php echo $teklif['currency']; ?></td>
         </tr>
-        <tr class="grand-total">
-            <td>GENEL TOPLAM:</td>
-            <td><?php echo number_format($teklif['grand_total'], 2, ',', '.'); ?> <?php echo $teklif['currency']; ?></td>
+        <!-- GENEL TOPLAM (Her Zaman Görünür) -->
+        <tr style="background-color: #e9ecef;">
+            <td class="grand-total" style="text-align: right; padding: 8px;">G.TOPLAM:</td>
+            <td class="grand-total" style="text-align: right; padding: 8px;"><?php echo number_format($teklif['grand_total'], 2, ',', '.'); ?> <?php echo $teklif['currency']; ?></td>
         </tr>
     </table>
 </div>

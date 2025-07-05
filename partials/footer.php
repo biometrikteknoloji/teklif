@@ -69,7 +69,7 @@
 
             var formatter = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             
-            // Yeni HTML yapısına göre ID'leri düzeltiyoruz
+            // Yeni HTML yapısına göre ID'leri düzeltiyoruza
             $('#toplamBrut').text(formatter.format(toplamBrut) + currencySymbol);
             $('#araToplamNet').text(formatter.format(araToplamNet) + currencySymbol);
             $('#kdvTutari').text(formatter.format(kdvAmount) + currencySymbol);
@@ -174,6 +174,7 @@
                 return new bootstrap.Tooltip(tooltipTriggerEl)
             });
         });
+		
     </script>
 </body>
 </html>
