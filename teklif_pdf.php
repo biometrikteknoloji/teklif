@@ -12,7 +12,11 @@ require_once PROJECT_ROOT . '/config/database.php';
 $id = $_GET['id'] ?? null;
 if (!$id || !is_numeric($id)) { exit('Geçersiz veya eksik Teklif ID.'); }
 
-$sql_proposal = "SELECT p.*, c.*, u.full_name as user_name FROM proposals p JOIN customers c ON p.customer_id = c.id JOIN users u ON p.user_id = u.id WHERE p.id = ?";
+$sql_proposal = "SELECT p.*, c.*, u.full_name as user_name, u.email as user_email, u.phone as user_phone 
+                 FROM proposals p 
+                 JOIN customers c ON p.customer_id = c.id 
+                 JOIN users u ON p.user_id = u.id 
+                 WHERE p.id = ?";
 $stmt = $pdo->prepare($sql_proposal);
 $stmt->execute([$id]);
 $teklif = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -25,7 +29,6 @@ $teklif_items = $stmt_items->fetchAll(PDO::FETCH_ASSOC);
 $settings_stmt = $pdo->query("SELECT setting_key, setting_value FROM settings");
 $settings = $settings_stmt->fetchAll(PDO::FETCH_KEY_PAIR);
 
-// === YENİ RENK DEĞİŞKENİ ===
 $theme_color = $settings['proposal_theme_color'] ?? '#004a99';
 
 ob_start();
@@ -36,38 +39,33 @@ ob_start();
     <meta charset="UTF-8">
     <title>Teklif - <?php echo htmlspecialchars($teklif['proposal_no']); ?></title>
     <style>
-        @page { margin: 100px 25px 80px 25px; }
-        body { font-family: 'dejavu sans', sans-serif; font-size: 10px; color: #333; }
-        header { position: fixed; top: -80px; left: 0px; right: 0px; height: 70px; text-align: center; }
-        header img { max-width: 100%; height: auto; }
+        /* === CSS YERLEŞİMİ GÜNCELLENDİ === */
+        @page { margin: 90px 25px 80px 25px; } /* Üst boşluk azaltıldı */
+        body { font-family: 'dejavu sans', sans-serif; font-size: 9.5px; color: #333; }
+        header { position: fixed; top: -75px; left: 0px; right: 0px; height: 65px; text-align: center; }
+        header img { max-width: 100%; max-height: 65px; }
         footer { position: fixed; bottom: -60px; left: 0px; right: 0px; height: 50px; text-align: center; }
         footer img { max-width: 100%; }
         .page-number:after { content: "Sayfa " counter(page); }
         main { }
-        .info-table { margin-top: 0; margin-bottom: 20px; width: 100%; border-spacing: 10px 0; border-collapse: separate; }
+        .info-table { margin-top: 5px; margin-bottom: 15px; width: 100%; border-spacing: 5px 0; border-collapse: separate; }
         .info-table td { width: 50%; vertical-align: top; }
-        .info-box { border: 1px solid #dee2e6; padding: 15px; height: 110px; }
-        .info-box h3 { font-size: 10px; margin-top: 0; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid #dee2e6; font-weight: bold; text-transform: uppercase; }
-        .items-table { margin-top: 20px; width: 100%; border-collapse: collapse; }
-        .items-table th, .items-table td { border: 1px solid #dee2e6; padding: 8px; text-align: left; vertical-align: middle; }
-        
-        /* === DİNAMİK RENK KULLANIMI === */
+        .info-box { border: 1px solid #dee2e6; padding: 10px; height: 95px; }
+        .info-box h3 { font-size: 9.5px; margin-top: 0; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #dee2e6; font-weight: bold; text-transform: uppercase; }
+        .items-table { margin-top: 15px; width: 100%; border-collapse: collapse; }
+        .items-table th, .items-table td { border: 1px solid #dee2e6; padding: 6px; text-align: left; vertical-align: middle; }
         .items-table th { background-color: <?php echo $theme_color; ?>; color: #ffffff; }
-        
-        .items-table .product-image { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; }
-        .product-description { font-size: 9px; color: #555; padding-top: 5px; }
-        .totals-section { width: 100%; margin-top: 20px; }
-        .totals-table { width: 45%; float: right; border-collapse: collapse; }
-        .totals-table td { padding: 6px; }
+        .items-table .product-image { width: 45px; height: 45px; object-fit: cover; border-radius: 4px; }
+        .product-description { font-size: 8.5px; color: #555; padding-top: 4px; }
+        .totals-section { width: 100%; margin-top: 15px; }
+        .totals-table { width: 40%; float: right; border-collapse: collapse; }
+        .totals-table td { padding: 5px; font-size: 10px; }
         .totals-table tr td:first-child { text-align: right; font-weight: bold; }
         .totals-table tr td:last-child { text-align: right; }
-        .grand-total { font-size: 14px; font-weight: bold; border-top: 1px solid #333; }
-        .notes-section { margin-top: 40px; page-break-inside: avoid; }
-        
-        /* === DİNAMİK RENK KULLANIMI === */
-        .notes-section h4 { font-size: 12px; font-weight: bold; color: <?php echo $theme_color; ?>; border-bottom: 1px solid <?php echo $theme_color; ?>; padding-bottom: 5px; margin-bottom: 10px; }
-        
-        .notes-section div { font-size: 9.5px; line-height: 1.4; }
+        .grand-total { font-size: 13px; font-weight: bold; border-top: 1px solid #333; }
+        .notes-section { margin-top: 30px; page-break-inside: avoid; }
+        .notes-section h4 { font-size: 11px; font-weight: bold; color: <?php echo $theme_color; ?>; border-bottom: 1px solid <?php echo $theme_color; ?>; padding-bottom: 4px; margin-bottom: 8px; }
+        .notes-section div { font-size: 9px; line-height: 1.3; }
         .text-end { text-align: right; }
         .text-center { text-align: center; }
         .clearfix::after { content: ""; clear: both; display: table; }
@@ -88,16 +86,16 @@ ob_start();
     </footer>
 
     <main>
-        <h2 style="text-align:center; font-size:18px; margin-bottom: 20px;">FİYAT TEKLİFİ</h2>
+        <!-- === BAŞLIK YUKARI TAŞINDI === -->
+        <h2 style="text-align:center; font-size:16px; margin-bottom: 10px; margin-top: -10px;">FİYAT TEKLİFİ</h2>
+        
         <table class="info-table">
            <tr>
                <td>
                    <div class="info-box">
                        <h3>Müşteri Bilgileri</h3>
                        <strong><?php echo htmlspecialchars($teklif['unvan']); ?></strong><br>
-                       <?php if (!empty($teklif['contact_person'])): ?>
-                           <strong>İlgili Kişi:</strong> <?php echo htmlspecialchars($teklif['contact_person']); ?><br>
-                       <?php endif; ?>
+                       <?php if (!empty($teklif['contact_person'])): ?><strong>İlgili Kişi:</strong> <?php echo htmlspecialchars($teklif['contact_person']); ?><br><?php endif; ?>
                        <?php if(!empty($teklif['adres'])): ?><?php echo nl2br(htmlspecialchars($teklif['adres'])); ?><br><?php endif; ?>
                        <?php if(!empty($teklif['telefon'])): ?>Tel: <?php echo htmlspecialchars($teklif['telefon']); ?><br><?php endif; ?>
                        <?php if(!empty($teklif['email'])): ?>E-posta: <?php echo htmlspecialchars($teklif['email']); ?><?php endif; ?>
@@ -108,10 +106,10 @@ ob_start();
                        <h3>Teklif Bilgileri</h3>
                        <strong>Teklif No:</strong> <?php echo htmlspecialchars($teklif['proposal_no']); ?><br>
                        <strong>Tarih:</strong> <?php echo date('d.m.Y', strtotime($teklif['proposal_date'])); ?><br>
-                       <?php if (!empty($teklif['subject'])): ?>
-                           <strong>Konu:</strong> <?php echo htmlspecialchars($teklif['subject']); ?><br>
-                       <?php endif; ?>
-                       <strong>Hazırlayan:</strong> <?php echo htmlspecialchars($teklif['user_name']); ?>
+                       <?php if (!empty($teklif['subject'])): ?><strong>Konu:</strong> <?php echo htmlspecialchars($teklif['subject']); ?><br><?php endif; ?>
+                       <strong>Hazırlayan:</strong> <?php echo htmlspecialchars($teklif['user_name']); ?><br>
+                       <?php if (!empty($teklif['user_phone'])): ?><strong>Tel:</strong> <?php echo htmlspecialchars($teklif['user_phone']); ?><br><?php endif; ?>
+                       <?php if (!empty($teklif['user_email'])): ?><strong>E-posta:</strong> <?php echo htmlspecialchars($teklif['user_email']); ?><?php endif; ?>
                    </div>
                </td>
            </tr>
@@ -155,14 +153,36 @@ ob_start();
             </tbody>
         </table>
         
-        <div class="totals-section clearfix">
-            <table class="totals-table">
-                <tr><td>Ara Toplam:</td><td><?php echo number_format($teklif['sub_total'], 2, ',', '.'); ?> <?php echo $teklif['currency']; ?></td></tr>
-                <tr><td>İndirim Toplamı:</td><td>- <?php echo number_format($teklif['total_discount'], 2, ',', '.'); ?> <?php echo $teklif['currency']; ?></td></tr>
-                <tr><td>KDV (%<?php echo number_format($teklif['tax_rate'], 0); ?>):</td><td><?php echo number_format($teklif['tax_amount'], 2, ',', '.'); ?> <?php echo $teklif['currency']; ?></td></tr>
-                <tr class="grand-total"><td>GENEL TOPLAM:</td><td><?php echo number_format($teklif['grand_total'], 2, ',', '.'); ?> <?php echo $teklif['currency']; ?></td></tr>
-            </table>
-        </div>
+<div class="totals-section clearfix">
+    <table class="totals-table">
+        <tr>
+            <td>Ara Toplam:</td>
+            <td><?php echo number_format($teklif['sub_total'], 2, ',', '.'); ?> <?php echo $teklif['currency']; ?></td>
+        </tr>
+        
+        <?php 
+        // --- YENİ VE DAHA GÜVENLİ KONTROL ---
+        // 1. Değerin var ve sayısal olduğundan emin ol.
+        // 2. Değeri iki ondalık basamağa yuvarla (örn: 0.004 -> 0.00).
+        // 3. Sadece sonuç 0.01'den BÜYÜKSE satırı göster.
+        if (isset($teklif['total_discount']) && is_numeric($teklif['total_discount']) && round((float)$teklif['total_discount'], 2) > 0): 
+        ?>
+            <tr>
+                <td>İndirim Toplamı:</td>
+                <td>- <?php echo number_format($teklif['total_discount'], 2, ',', '.'); ?> <?php echo $teklif['currency']; ?></td>
+            </tr>
+        <?php endif; ?>
+        
+        <tr>
+            <td>KDV (%<?php echo number_format($teklif['tax_rate'], 0); ?>):</td>
+            <td><?php echo number_format($teklif['tax_amount'], 2, ',', '.'); ?> <?php echo $teklif['currency']; ?></td>
+        </tr>
+        <tr class="grand-total">
+            <td>GENEL TOPLAM:</td>
+            <td><?php echo number_format($teklif['grand_total'], 2, ',', '.'); ?> <?php echo $teklif['currency']; ?></td>
+        </tr>
+    </table>
+</div>
 
         <div class="clearfix"></div>
         <?php if (!empty($settings['proposal_default_notes'])): ?>

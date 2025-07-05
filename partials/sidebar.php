@@ -48,6 +48,20 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <a href="ayarlar.php">
                     <i class="fas fa-cog me-2"></i>Ayarlar
                 </a>
+				<!-- ... diğer menü öğeleri ... -->
+<li class="<?php echo ($currentPage == 'ayarlar.php') ? 'active' : ''; ?>">
+    <a href="ayarlar.php"><i class="fas fa-cog"></i> Ayarlar</a>
+</li>
+
+<!-- === YENİ LİNKİ BURAYA YAPIŞTIR === -->
+<li class="<?php echo ($currentPage == 'durum_yonetimi.php') ? 'active' : ''; ?>">
+    <a href="durum_yonetimi.php"><i class="fas fa-tags"></i> Durum Yönetimi</a>
+</li>
+
+<li>
+    <a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
+</li>
+<!-- ... -->
             </li>
         </ul>
         <?php endif; ?>
