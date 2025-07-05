@@ -174,6 +174,82 @@ include 'partials/header.php';
 <div class="modal fade" id="mailGonderModal" tabindex="-1">
     <!-- ... (içerik aynı) ... -->
 </div>
+<!-- === 1. EKLENECEK KOD BLOĞU: MODAL PENCERESİ === -->
+<div class="modal fade" id="mailGonderModal" tabindex="-1" aria-labelledby="mailGonderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="mailGonderModalLabel">Teklif Maili Gönder</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="sendMailForm">
+                <div class="modal-body">
+                    <input type="hidden" id="mail_proposal_id" name="proposal_id">
+                    <div class="mb-3">
+                        <label for="to_email" class="form-label">Alıcı E-posta Adresi:</label>
+                        <input type="email" class="form-control" id="to_email" name="to_email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="subject" class="form-label">Konu:</label>
+                        <input type="text" class="form-control" id="subject" name="subject" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="mail_body" class="form-label">Mail İçeriği:</label>
+                        <textarea class="form-control" id="mail_body" name="body" rows="6"></textarea>
+                    </div>
+                    <div id="mail-response-alert" class="alert mt-3" style="display: none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                    <button type="submit" class="btn btn-primary">Gönder</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- === 1. EKLENECEK KOD BLOĞU: MODAL PENCERESİ === -->
+<button type="button" class="btn btn-success btn-sm" 
+        data-bs-toggle="modal" 
+        data-bs-target="#mailGonderModal" 
+        data-proposal-id="<?php echo $versiyon['id']; ?>" 
+        data-proposal-no="<?php echo htmlspecialchars($versiyon['proposal_no']); ?>" 
+        data-customer-name="<?php echo htmlspecialchars($versiyon['unvan']); ?>" 
+        data-customer-email="<?php echo htmlspecialchars($versiyon['customer_email']); ?>">
+    <i class="fas fa-paper-plane me-2"></i>Mail Olarak Gönder
+</button>
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="mailGonderModalLabel">Teklif Maili Gönder</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="sendMailForm">
+                <div class="modal-body">
+                    <input type="hidden" id="mail_proposal_id" name="proposal_id">
+                    <div class="mb-3">
+                        <label for="to_email" class="form-label">Alıcı E-posta Adresi:</label>
+                        <input type="email" class="form-control" id="to_email" name="to_email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="subject" class="form-label">Konu:</label>
+                        <input type="text" class="form-control" id="subject" name="subject" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="mail_body" class="form-label">Mail İçeriği:</label>
+                        <textarea class="form-control" id="mail_body" name="body" rows="6"></textarea>
+                    </div>
+                    <div id="mail-response-alert" class="alert mt-3" style="display: none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                    <button type="submit" class="btn btn-primary">Gönder</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<?php include 'partials/footer.php'; ?>
 
 <?php 
 include 'partials/footer.php'; 

@@ -176,5 +176,139 @@
         });
 		
     </script>
+	<?php
+// === 2. EKLENECEK KOD BLOĞU: JAVASCRIPT ===
+// Mevcut sayfanın adını alıyoruz
+$currentPage = basename($_SERVER['PHP_SELF']);
+
+// Bu kodun sadece teklif_view.php sayfasında çalışmasını sağlıyoruz
+if ($currentPage == 'teklif_view.php'):
+?>
+<script>
+$(document).ready(function() {
+    // "Mail Gönder" butonuna tıklandığında modal içindeki formu doldur
+    $('#mailGonderModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var proposalId = button.data('proposal-id');
+        var proposalNo = button.data('proposal-no');
+        var customerEmail = button.data('customer-email');
+        var customerName = button.data('customer-name');
+
+        var modal = $(this);
+        modal.find('#mail_proposal_id').val(proposalId);
+        modal.find('#to_email').val(customerEmail);
+        modal.find('#subject').val(proposalNo + ' Numaralı Fiyat Teklifiniz');
+        modal.find('#mail_body').val('Sayın ' + customerName + ',\n\nİlginize teşekkür eder, teklifimizi ekte bilgilerinize sunarız.\n\nİyi çalışmalar dileriz.');
+    });
+
+    // Modal'daki "Gönder" butonuna basıldığında AJAX ile maili gönder
+    $('#sendMailForm').on('submit', function(e) {
+        e.preventDefault(); 
+
+        var form = $(this);
+        var submitButton = form.find('button[type="submit"]');
+        var originalButtonText = submitButton.html();
+        var alertDiv = $('#mail-response-alert');
+
+        submitButton.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Gönderiliyor...');
+        alertDiv.hide();
+
+        $.ajax({
+            type: 'POST',
+            url: 'send_mail.php', 
+            data: form.serialize(),
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    alertDiv.removeClass('alert-danger').addClass('alert-success').text(response.message).show();
+                    setTimeout(function() {
+                        $('#mailGonderModal').modal('hide');
+                        location.reload(); 
+                    }, 2000);
+                } else {
+                    alertDiv.removeClass('alert-success').addClass('alert-danger').text(response.message).show();
+                    submitButton.prop('disabled', false).html(originalButtonText);
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error("AJAX Hatası: ", jqXHR.responseText);
+                alertDiv.removeClass('alert-success').addClass('alert-danger').text('Sunucuya bağlanırken bir hata oluştu. Detaylar için konsolu kontrol edin.').show();
+                submitButton.prop('disabled', false).html(originalButtonText);
+            }
+        });
+    });
+});
+</script>
+<?php 
+endif; 
+?>
+<?php
+// === 2. EKLENECEK KOD BLOĞU: JAVASCRIPT ===
+// Mevcut sayfanın adını alıyoruz
+if(isset($_SERVER['PHP_SELF'])){
+    $currentPage = basename($_SERVER['PHP_SELF']);
+
+    // Bu kodun sadece teklif_view.php sayfasında çalışmasını sağlıyoruz
+    if ($currentPage == 'teklif_view.php'):
+?>
+<script>
+$(document).ready(function() {
+    // "Mail Gönder" butonuna tıklandığında modal içindeki formu doldur
+    $('#mailGonderModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var proposalId = button.data('proposal-id');
+        var proposalNo = button.data('proposal-no');
+        var customerEmail = button.data('customer-email');
+        var customerName = button.data('customer-name');
+
+        var modal = $(this);
+        modal.find('#mail_proposal_id').val(proposalId);
+        modal.find('#to_email').val(customerEmail);
+        modal.find('#subject').val(proposalNo + ' Numaralı Fiyat Teklifiniz');
+        modal.find('#mail_body').val('Sayın ' + customerName + ',\n\nİlginize teşekkür eder, teklifimizi ekte bilgilerinize sunarız.\n\nİyi çalışmalar dileriz.');
+    });
+
+    // Modal'daki "Gönder" butonuna basıldığında AJAX ile maili gönder
+    $('#sendMailForm').on('submit', function(e) {
+        e.preventDefault(); 
+
+        var form = $(this);
+        var submitButton = form.find('button[type="submit"]');
+        var originalButtonText = submitButton.html();
+        var alertDiv = $('#mail-response-alert');
+
+        submitButton.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Gönderiliyor...');
+        alertDiv.hide();
+
+        $.ajax({
+            type: 'POST',
+            url: 'send_mail.php', 
+            data: form.serialize(),
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    alertDiv.removeClass('alert-danger').addClass('alert-success').text(response.message).show();
+                    setTimeout(function() {
+                        $('#mailGonderModal').modal('hide');
+                        location.reload(); 
+                    }, 2000);
+                } else {
+                    alertDiv.removeClass('alert-success').addClass('alert-danger').text(response.message).show();
+                    submitButton.prop('disabled', false).html(originalButtonText);
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error("AJAX Hatası: ", jqXHR.responseText);
+                alertDiv.removeClass('alert-success').addClass('alert-danger').text('Sunucuya bağlanırken bir hata oluştu. Detaylar için konsolu kontrol edin.').show();
+                submitButton.prop('disabled', false).html(originalButtonText);
+            }
+        });
+    });
+});
+</script>
+<?php 
+    endif; 
+}
+?>
 </body>
 </html>
