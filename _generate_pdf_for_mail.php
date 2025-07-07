@@ -230,5 +230,15 @@ $dompdf->setPaper('A4', 'portrait');
 $dompdf->render();
 
 $dosya_adi = 'Teklif-' . str_replace('/', '-', $teklif['proposal_no']) . '.pdf';
-return $dompdf->output();
+// generate_pdf_for_mail.php dosyasının sonu
+
+// ...
+$dompdf->setPaper('A4', 'portrait');
+$dompdf->render();
+
+// ESKİ SATIR (SİLİNDİ): $dompdf->stream($dosya_adi, ["Attachment" => false]); 
+
+// YENİ SATIR:
+return $dompdf->output(); 
+?> 
 ?>
