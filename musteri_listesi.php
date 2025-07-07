@@ -30,9 +30,15 @@ include 'partials/header.php';
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1>Müşteri Listesi</h1>
                 <?php if ($_SESSION['user_role_id'] == 1): // Sadece Admin görebilir ?>
-                    <a href="musteri_ekle.php" class="btn btn-success">
-                        <i class="fas fa-plus me-2"></i>Yeni Müşteri Ekle
-                    </a>
+                  <!-- === DEĞİŞTİRİLECEK KOD BLOĞU === -->
+<div class="btn-group">
+    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#importExcelModal">
+        <i class="fas fa-file-import me-2"></i>Excel'den İçe Aktar
+    </button>
+    <a href="musteri_ekle.php" class="btn btn-success">
+        <i class="fas fa-plus me-2"></i>Yeni Müşteri Ekle
+    </a>
+</div>
                 <?php endif; ?>
             </div>
 
@@ -79,6 +85,39 @@ include 'partials/header.php';
             </div>
 
         </div>
+		<!-- === SAYFA SONUNA EKLENECEK KOD === -->
+
+<!-- 1. Modal Penceresinin HTML Kodu -->
+<div class="modal fade" id="importExcelModal" tabindex="-1" aria-labelledby="importExcelModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importExcelModalLabel">Excel'den Müşteri Aktar</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="import_customers.php" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="excelFile" class="form-label">Excel Dosyası (.xlsx)</label>
+                        <input class="form-control" type="file" id="excelFile" name="excelFile" accept=".xlsx" required>
+                    </div>
+                    <div class="alert alert-info">
+                        <strong>Önemli:</strong> Yükleyeceğiniz Excel dosyasının ilk satırı başlık olmalı ve sırasıyla şu sütunları içermelidir:
+                        <br><code>unvan</code>, <code>adres</code>, <code>telefon</code>, <code>vergi_dairesi</code>, <code>vergi_no</code>, <code>email</code>, <code>cep_telefonu</code>, <code>yetkili_ismi</code>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                    <button type="submit" class="btn btn-primary">Yükle ve Aktar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 2. Modal'ın Çalışması İçin Gerekli JavaScript Kütüphaneleri -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="assets/js/bootstrap.bundle.min.js"></script>
     </div>
 </div>
 
