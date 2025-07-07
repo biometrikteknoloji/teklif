@@ -16,6 +16,46 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($stmt_check->fetchColumn() > 0) { $stmt = $pdo->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = ?"); $stmt->execute([$value, $key]); } 
         else { $stmt = $pdo->prepare("INSERT INTO settings (setting_key, setting_value) VALUES (?, ?)"); $stmt->execute([$key, $value]); }
     }
+	//
+	    // === YENİ EKLENECEK KOD: FİRMA LOGOSU YÜKLEME ===
+    if (isset($_FILES['company_logo']) && $_FILES['company_logo']['error'] == UPLOAD_ERR_OK) {
+        $logo_key = 'company_logo_path';
+        $upload_dir = 'uploads/'; // Ana dizindeki uploads klasörü
+
+        if (!is_dir(__DIR__ . '/../' . $upload_dir)) {
+            mkdir(__DIR__ . '/../' . $upload_dir, 0755, true);
+        }
+
+        // Eski logoyu sil
+        $old_logo_stmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = ?");
+        $old_logo_stmt->execute([$logo_key]);
+        if ($old_logo_path = $old_logo_stmt->fetchColumn()) {
+            if (file_exists(__DIR__ . '/../' . $old_logo_path)) {
+                unlink(__DIR__ . '/../' . $old_logo_path);
+            }
+        }
+        
+        // Yeni logoyu yükle
+        $file_extension = strtolower(pathinfo($_FILES['company_logo']['name'], PATHINFO_EXTENSION));
+        $file_name = 'logo_' . time() . '.' . $file_extension;
+        $file_path_for_db = $upload_dir . $file_name;
+        $destination = __DIR__ . '/../' . $file_path_for_db;
+        
+        if (move_uploaded_file($_FILES['company_logo']['tmp_name'], $destination)) {
+            // Veritabanına kaydet
+            $stmt_check = $pdo->prepare("SELECT COUNT(*) FROM settings WHERE setting_key = ?");
+            $stmt_check->execute([$logo_key]);
+            if ($stmt_check->fetchColumn() > 0) {
+                $stmt = $pdo->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = ?");
+                $stmt->execute([$file_path_for_db, $logo_key]);
+            } else {
+                $stmt = $pdo->prepare("INSERT INTO settings (setting_key, setting_value) VALUES (?, ?)");
+                $stmt->execute([$logo_key, $file_path_for_db]);
+            }
+        }
+    }
+    // --- YENİ KOD SONU ---
+	//
     // Varsayılan Notları Kaydet
     if (isset($post_data['proposal_default_notes'])) {
         $key = 'proposal_default_notes'; $value = $post_data['proposal_default_notes'];
@@ -45,6 +85,46 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     header("Location: ayarlar.php?status=success");
     exit();
 }
+        // --- YENİ VE GÜVENLİ LOGO YÜKLEME KODU ---
+    if (isset($_FILES['company_logo']) && $_FILES['company_logo']['error'] == UPLOAD_ERR_OK) {
+       $upload_dir = '../uploads/'; // Ana dizindeki uploads klasörü
+
+        // 1. Klasör var mı diye kontrol et, yoksa oluştur.
+        if (!is_dir($upload_dir)) {
+            mkdir($upload_dir, 0755, true);
+        }
+
+        // 2. Eski logoyu sil
+        $old_logo_stmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = ?");
+        $old_logo_stmt->execute([$logo_key]);
+        if ($old_logo_path = $old_logo_stmt->fetchColumn()) {
+            // Ana dizinden itibaren yolu birleştir
+            $full_old_path = '../' . $old_logo_path;
+            if (file_exists($full_old_path)) {
+                unlink($full_old_path);
+            }
+        }
+        
+        // 3. Yeni logoyu yükle
+        $file_extension = strtolower(pathinfo($_FILES['company_logo']['name'], PATHINFO_EXTENSION));
+        $file_name = 'logo_' . time() . '.' . $file_extension;
+        $file_path_for_db = 'uploads/' . $file_name; // Veritabanına kaydedilecek yol
+        $destination = $upload_dir . $file_name;      // Dosyanın taşınacağı gerçek yol
+        
+        if (move_uploaded_file($_FILES['company_logo']['tmp_name'], $destination)) {
+            // 4. Veritabanına yeni yolu kaydet
+            $stmt_check = $pdo->prepare("SELECT COUNT(*) FROM settings WHERE setting_key = ?");
+            $stmt_check->execute([$logo_key]);
+            if ($stmt_check->fetchColumn() > 0) {
+                $stmt = $pdo->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = ?");
+                $stmt->execute([$file_path_for_db, $logo_key]);
+            } else {
+                $stmt = $pdo->prepare("INSERT INTO settings (setting_key, setting_value) VALUES (?, ?)");
+                $stmt->execute([$logo_key, $file_path_for_db]);
+            }
+        }
+    }
+    // --- YENİ KOD SONU ---
 
 $settings_stmt = $pdo->query("SELECT setting_key, setting_value FROM settings");
 $settings = $settings_stmt->fetchAll(PDO::FETCH_KEY_PAIR);
@@ -79,6 +159,7 @@ include 'partials/header.php';
                         <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#settingsAccordion">
                             <div class="accordion-body">
                                 <div class="row">
+
                                     <div class="col-md-6 mb-3">
                                         <h5>Teklif Üst Bilgisi (Antet)</h5>
                                         <input class="form-control" type="file" name="header_image" accept="image/png,image/jpeg">
@@ -96,7 +177,24 @@ include 'partials/header.php';
                                         <p class="small text-muted">PDF'teki başlıkların ana rengi.</p>
                                         <input type="color" class="form-control form-control-color" name="proposal_theme_color" value="<?php echo htmlspecialchars($settings['proposal_theme_color'] ?? '#004a99'); ?>" title="Renk Seçin">
                                     </div>
-                                </div>
+                                                 <!-- === YENİ EKLENECEK KOD: FİRMA LOGOSU ALANI === -->
+                        <div class="row">
+                            <div class="col-md-12 mb-4">
+                                <h5>Firma Logosu</h5>
+                                <p class="small text-muted">Sol menüde görünecek olan ana logonuz.</p>
+                                <input class="form-control" type="file" name="company_logo" accept="image/png,image/jpeg,image/svg+xml">
+                                <?php if (!empty($settings['company_logo_path']) && file_exists($settings['company_logo_path'])): ?>
+                                    <div class="mt-2 p-2 border rounded bg-light" style="max-width: 250px;">
+                                        <p class="mb-1 small text-muted">Mevcut Logo:</p>
+                                        <img src="<?php echo htmlspecialchars($settings['company_logo_path']); ?>" class="img-fluid">
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <hr class="my-4">
+                        <!-- === YENİ KOD SONU === -->
+                        <!-- === YENİ KOD SONU === -->
+								</div>
                             </div>
                         </div>
                     </div>

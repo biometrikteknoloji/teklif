@@ -78,7 +78,7 @@ $stmt_last_rev->execute([$id, $id]);
 $teklif = $stmt_last_rev->fetch(PDO::FETCH_ASSOC);
 if (!$teklif) { header('Location: teklif_listesi.php'); exit(); }
 
-$stmt_items = $pdo->prepare("SELECT pi.*, p.urun_adi as text, p.fotograf_yolu FROM proposal_items pi JOIN products p ON pi.product_id = p.id WHERE pi.proposal_id = ?");
+$stmt_items = $pdo->prepare("SELECT pi.*, p.urun_adi as text, p.fotograf_yolu FROM proposal_items pi JOIN products p ON pi.product_id = p.id WHERE pi.proposal_id = ? ORDER BY pi.id ASC");
 $stmt_items->execute([$teklif['id']]);
 $teklif_items = $stmt_items->fetchAll(PDO::FETCH_ASSOC);
 
