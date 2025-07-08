@@ -46,11 +46,16 @@ include 'partials/header.php';
     <?php include 'partials/sidebar.php'; ?>
 
     <div class="main-content">
-        <div class="topbar">
-            <div class="user-info">
-                Hoş Geldin, <strong><?php echo htmlspecialchars($_SESSION['user_name'] ?? 'Misafir'); ?></strong>!
-            </div>
-        </div>
+      <div class="topbar">
+    <!-- === YENİ HAMBURGER BUTONU === -->
+    <button class="mobile-menu-toggle d-lg-none" type="button">
+        <i class="fas fa-bars"></i>
+    </button>
+    <!-- === BUTON SONU === -->
+    <div class="user-info ms-auto"> <!-- ms-auto ile sağa yasladık -->
+        Hoş Geldin, <strong><?php echo htmlspecialchars($_SESSION['user_name'] ?? 'Misafir'); ?></strong>!
+    </div>
+</div>
 
         <div class="page-content">
             <h1>Dashboard</h1>
