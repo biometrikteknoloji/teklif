@@ -3,14 +3,12 @@ header('Content-Type: application/json');
 require 'config/database.php';
 
 $template_id = $_GET['id'] ?? 0;
-
 if (!$template_id) {
     echo json_encode(['success' => false, 'message' => 'Şablon ID eksik.']);
     exit;
 }
 
 try {
-    // Şablona ait ürünleri, ürün bilgileri ve fiyatlarıyla birlikte çek
     $stmt = $pdo->prepare("
         SELECT 
             ti.product_id as id,
@@ -26,7 +24,6 @@ try {
     $stmt->execute([$template_id]);
     $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Fiyatları daha kullanışlı bir formata çevir
     foreach ($items as $key => $item) {
         if(!empty($item['prices_str'])) {
             $price_pairs = explode(';', $item['prices_str']);
@@ -43,7 +40,6 @@ try {
     }
 
     echo json_encode(['success' => true, 'items' => $items]);
-
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => 'Veri çekme hatası: ' . $e->getMessage()]);
 }

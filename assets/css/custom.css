@@ -1,65 +1,84 @@
-/* Genel Stil Resetlemeleri ve Font */
+/* Genel Ayarlar */
+:root {
+    --sidebar-width: 250px;
+    --sidebar-bg: #212529;
+    --sidebar-text-color: #adb5bd;
+    --sidebar-hover-bg: #343a40;
+    --sidebar-active-bg: #0d6efd;
+}
 body {
     background-color: #f8f9fa;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-/* Ana Taşıyıcı (Flexbox Konteyneri) */
+/* Ana Yapı (Flexbox) */
 .main-wrapper {
     display: flex;
     min-height: 100vh;
 }
-
-/* Kenar Çubuğu (Sidebar) */
 .sidebar {
-    width: 250px;
-    flex-shrink: 0; /* Küçülmesini engelle */
-    background-color: #212529;
-    color: #adb5bd;
+    width: var(--sidebar-width);
+    flex-shrink: 0;
+    background-color: var(--sidebar-bg);
+    color: var(--sidebar-text-color);
     transition: margin-left 0.3s;
 }
+.main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Sidebar İçeriği */
 .sidebar .logo {
     padding: 1.5rem 1rem;
     text-align: center;
     font-size: 1.5rem;
     font-weight: bold;
     color: #fff;
-    border-bottom: 1px solid #343a40;
+    border-bottom: 1px solid var(--sidebar-hover-bg);
 }
 .sidebar .nav-links {
     list-style: none;
     padding: 0;
     margin: 0;
+    display: flex;
+    flex-direction: column;
+    height: calc(100% - 85px); /* Logo yüksekliği kadar boşluk bırak */
 }
 .sidebar .nav-links a {
-    display: block;
+    display: flex;
+    align-items: center;
     padding: 1rem;
-    color: #adb5bd;
+    color: var(--sidebar-text-color);
     text-decoration: none;
-    border-left: 3px solid transparent;
     transition: all 0.2s;
 }
 .sidebar .nav-links a:hover {
-    background-color: #343a40;
+    background-color: var(--sidebar-hover-bg);
     color: #fff;
 }
 .sidebar .nav-links a.active {
-    background-color: #0d6efd;
+    background-color: var(--sidebar-active-bg);
     color: #fff;
-    border-left-color: #fff;
 }
 .sidebar .nav-links a i {
-    margin-right: 0.75rem;
+    margin-right: 0.8rem;
     width: 20px;
     text-align: center;
 }
-
-/* Ana İçerik Alanı */
-.main-content {
-    flex-grow: 1; /* Kalan tüm alanı kapla */
-    display: flex;
-    flex-direction: column;
+.sidebar .nav-links .logout-item {
+    margin-top: auto; /* Çıkış Yap'ı en alta iter */
 }
+.sidebar .nav-links .logout-item a {
+    background-color: #dc3545;
+    color: white;
+}
+.sidebar .nav-links .logout-item a:hover {
+    background-color: #c82333;
+}
+
+
+/* Topbar ve Page Content */
 .topbar {
     background-color: #fff;
     padding: 0.75rem 1.5rem;
@@ -73,6 +92,11 @@ body {
     flex-grow: 1;
 }
 
+/* Mobil Menü Butonu (Başlangıçta gizli) */
+.mobile-menu-toggle {
+    display: none;
+}
+
 /* === MOBİL UYUMLULUK (Responsive) === */
 /* Tablet ve daha küçük ekranlar için */
 @media (max-width: 991.98px) {
@@ -82,12 +106,12 @@ body {
         left: 0;
         height: 100%;
         z-index: 1050;
-        margin-left: -250px; /* Başlangıçta gizli */
+        margin-left: calc(-1 * var(--sidebar-width)); /* Gizli */
     }
     .sidebar.open {
-        margin-left: 0; /* Açıldığında görünür yap */
+        margin-left: 0; /* Görünür */
     }
-    .main-wrapper.sidebar-open .main-content::before {
+    .main-wrapper.sidebar-open .page-content::before {
         content: '';
         position: fixed;
         top: 0;
@@ -97,9 +121,8 @@ body {
         background: rgba(0,0,0,0.5);
         z-index: 1040;
     }
-    /* Mobil menü açma butonu topbar'a eklenecek */
     .mobile-menu-toggle {
-        display: inline-block !important; /* Görünür yap */
-        margin-right: auto; /* Sağa it */
+        display: inline-block;
+        margin-right: auto;
     }
 }

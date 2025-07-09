@@ -42,44 +42,52 @@
         }
         
         function updateAllCalculations() {
-            var currency = $('#currency').val();
-            var currencySymbol = ' ₺';
-            if (currency === 'USD') currencySymbol = ' $';
-            else if (currency === 'EUR') currencySymbol = ' €';
-            
-            var toplamBrut = 0;
-            $('#teklifKalemleri tbody tr').each(function() {
-                var row = $(this);
-                var quantity = parseFloat(row.find('.quantity').val()) || 0;
-                var unitPrice = parseFloat(row.find('.unit-price').val()) || 0;
-                var lineTotal = quantity * unitPrice;
-                row.find('.total-price').val(lineTotal.toFixed(2));
-                toplamBrut += lineTotal;
-            });
+    var currency = $('#currency').val();
+    var currencySymbol = ' ₺';
+    if (currency === 'USD') currencySymbol = ' $';
+    else if (currency === 'EUR') currencySymbol = ' €';
+    
+    var toplamBrut = 0;
+    $('#teklifKalemleri tbody tr').each(function() {
+        var row = $(this);
+        var quantity = parseFloat(row.find('.quantity').val()) || 0;
+        var unitPrice = parseFloat(row.find('.unit-price').val()) || 0;
+        var lineTotal = quantity * unitPrice;
+        row.find('.total-price').val(lineTotal.toFixed(2));
+        toplamBrut += lineTotal;
+    });
 
-            var genelIskontoTutar = 0;
-            if (!$('.discount-row').hasClass('d-none')) {
-                genelIskontoTutar = parseFloat($('#genelIskontoTutar').val()) || 0;
-            }
-            
-            var araToplamNet = toplamBrut - genelIskontoTutar;
-            var kdvPercent = parseFloat($('#kdvOrani').val()) || 0;
-            var kdvAmount = araToplamNet * (kdvPercent / 100);
-            var grandTotal = araToplamNet + kdvAmount;
+    // İskonto Tutarı'nı doğrudan input'tan al
+    var genelIskontoTutar = 0;
+    if (!$('.discount-row').hasClass('d-none')) {
+        genelIskontoTutar = parseFloat($('#genelIskontoTutar').val()) || 0;
+    }
+    
+    // İskonto Yüzdesi'ni Tutar'a göre hesapla
+    if (toplamBrut > 0) {
+        var yuzde = (genelIskontoTutar / toplamBrut) * 100;
+        $('#genelIskontoYuzde').val(yuzde > 0 ? yuzde.toFixed(2) : '');
+    } else {
+        $('#genelIskontoYuzde').val('');
+    }
+    
+    var araToplamNet = toplamBrut - genelIskontoTutar;
+    var kdvPercent = parseFloat($('#kdvOrani').val()) || 0;
+    var kdvAmount = araToplamNet * (kdvPercent / 100);
+    var grandTotal = araToplamNet + kdvAmount;
 
-            var formatter = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            
-            // Yeni HTML yapısına göre ID'leri düzeltiyoruza
-            $('#toplamBrut').text(formatter.format(toplamBrut) + currencySymbol);
-            $('#araToplamNet').text(formatter.format(araToplamNet) + currencySymbol);
-            $('#kdvTutari').text(formatter.format(kdvAmount) + currencySymbol);
-            $('#genelToplam').text(formatter.format(grandTotal) + currencySymbol);
+    var formatter = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    
+    $('#toplamBrut').text(formatter.format(toplamBrut) + currencySymbol);
+    $('#araToplamNet').text(formatter.format(araToplamNet) + currencySymbol);
+    $('#kdvTutari').text(formatter.format(kdvAmount) + currencySymbol);
+    $('#genelToplam').text(formatter.format(grandTotal) + currencySymbol);
 
-            // İskonto gösterimini de güncelleyelim
-            $('#genelIskontoGosterim').text(`(${formatter.format(genelIskontoTutar)})${currencySymbol}`);
+    // Bu alanı artık kullanmıyoruz ama kalsın
+    // $('#genelIskontoGosterim').text(`(${formatter.format(genelIskontoTutar)})${currencySymbol}`);
 
-            $('#kdv_rate_hidden').val(kdvPercent);
-        }
+    $('#kdv_rate_hidden').val(kdvPercent);
+}
 
         // === OLAY DİNLEYİCİLERİ ===
         $('#urunEkleBtn').on('click', addProductRow);
@@ -111,13 +119,15 @@
             updateAllCalculations();
         });
 
-        $('#genelIskontoYuzde').on('input', function() {
-            var yuzde = parseFloat($(this).val()) || 0;
-            var brutToplam = parseFloat($('#toplamBrut').text().replace(/\./g, '').replace(',', '.')) || 0;
-            var tutar = (brutToplam * yuzde) / 100;
-            $('#genelIskontoTutar').val(tutar > 0 ? tutar.toFixed(2) : '');
-            updateAllCalculations();
-        });
+       $('#genelIskontoTutar').on('input', function() {
+    var tutar = parseFloat($(this).val()) || 0;
+    var brutToplam = parseFloat($('#toplamBrut').text().replace(/\./g, '').replace(',', '.')) || 0;
+    if (brutToplam > 0) {
+        var yuzde = (tutar / brutToplam) * 100;
+        $('#genelIskontoYuzde').val(yuzde > 0 ? yuzde.toFixed(2) : '');
+    } else { $('#genelIskontoYuzde').val(''); }
+    updateAllCalculations();
+});
 
         $('#genelIskontoTutar').on('input', function() {
             var tutar = parseFloat($(this).val()) || 0;
@@ -163,6 +173,64 @@
                 addProductRow();
             }
         }
+		        // === YENİ EKLENECEK KOD: ŞABLON YÜKLEME (MEVCUT YAPIYI BOZMAZ) ===
+        
+        // 1. Şablon Dropdown'ını Select2 ile başlat
+        $('#template_id').select2({
+            placeholder: "Bir şablon seçin...",
+            allowClear: true // Temizleme (X) butonu ekler
+        });
+
+        // 2. Şablon seçildiğinde çalışacak olay dinleyici
+        $('#template_id').on('change', function() {
+            var templateId = $(this).val();
+            
+            // Eğer seçim kaldırıldıysa, tabloyu temizle ve bir boş satır ekle
+            if (!templateId) {
+                $('#teklifKalemleri tbody').empty();
+                addProductRow(); // Bu senin mevcut addProductRow fonksiyonun
+                updateAllCalculations(); // Bu da senin mevcut hesaplama fonksiyonun
+                return;
+            }
+
+            // AJAX ile şablonun ürünlerini getir
+            $.ajax({
+                url: 'api_get_template_details.php?id=' + templateId,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success && response.items) {
+                        $('#teklifKalemleri tbody').empty(); // Önce mevcut satırları temizle
+                        
+                        // Gelen her bir ürün için yeni bir satır ekle
+                        response.items.forEach(function(item) {
+                            addProductRow(); // Senin mevcut fonksiyonun ile boş bir satır ekle
+                            
+                            var newRow = $('#teklifKalemleri tbody tr:last-child');
+                            var newSelect = newRow.find('.product-select');
+                            
+                            // Yeni eklenen satırdaki alanları doldur
+                            var option = new Option(item.text, item.id, true, true);
+                            newSelect.append(option).trigger('change');
+                            newSelect.data('prices', item.prices); // Fiyatları sakla
+                            
+                            newRow.find('.quantity').val(item.quantity);
+                            
+                            // Ürün görselini güncelle
+                            var imagePath = item.fotograf_yolu ? item.fotograf_yolu : 'assets/images/placeholder.png';
+                            newRow.find('.product-image').attr('src', imagePath);
+                        });
+
+                        // Tüm satırlar eklendikten sonra bir kez hesapla
+                        updateAllCalculations();
+                    }
+                },
+                error: function() {
+                    alert('Şablon yüklenirken bir hata oluştu.');
+                }
+            });
+        });
+        // === YENİ KOD SONU ===
     });
     </script>
     <?php endif; ?>
@@ -236,6 +304,40 @@ $(document).ready(function() {
                 submitButton.prop('disabled', false).html(originalButtonText);
             }
         });
+		        // === YENİ EKLENECEK KOD: ŞABLON YÜKLEME ===
+        $('#template_id').select2({
+            placeholder: "Bir şablon seçin...",
+            allowClear: true
+        });
+
+        $('#template_id').on('change', function() {
+            var templateId = $(this).val();
+            if (!templateId) {
+                $('#teklifKalemleri tbody').empty(); // Şablon seçimi kaldırılırsa listeyi temizle
+                addProductRow(); // Bir tane boş satır ekle
+                return;
+            }
+
+            $.ajax({
+                url: 'api_get_template_details.php?id=' + templateId,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success && response.items) {
+                        $('#teklifKalemleri tbody').empty(); // Önce mevcut satırları temizle
+                        response.items.forEach(function(item) {
+                            addProductRow(item); // Her ürün için yeni bir satır ekle
+                        });
+                        // Tüm satırlar eklendikten sonra toplamları güncelle
+                        setTimeout(function() { updateAllCalculations(); }, 100);
+                    }
+                },
+                error: function() {
+                    alert('Şablon yüklenirken bir hata oluştu.');
+                }
+            });
+        });
+        // === YENİ KOD SONU ===
     });
 });
 </script>
@@ -310,5 +412,108 @@ $(document).ready(function() {
     endif; 
 }
 ?>
+<!-- === YENİ EKLENECEK KOD: MOBİL MENÜ İŞLEVSELLİĞİ === -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gerekli HTML elemanlarını seç
+    const menuToggle = document.querySelector('.mobile-menu-toggle');
+    const sidebar = document.querySelector('.sidebar');
+    const mainWrapper = document.querySelector('.main-wrapper');
+
+    // Eğer menü butonu ve sidebar varsa, tıklama olayını ekle
+    if (menuToggle && sidebar) {
+        menuToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('open');
+            mainWrapper.classList.toggle('sidebar-open');
+        });
+    }
+    
+    // Menü dışına (karartılmış alana) tıklandığında menüyü kapat
+    if (mainWrapper) {
+        mainWrapper.addEventListener('click', function(e) {
+            // Sadece .main-wrapper'ın kendisine tıklandıysa ve menü açıksa
+            if(e.target === mainWrapper && sidebar.classList.contains('open')) {
+                 sidebar.classList.remove('open');
+                 mainWrapper.classList.remove('sidebar-open');
+            }
+        });
+    }
+});
+
+<!-- === MOBİL MENÜ KAPATMA İŞLEVSELLİĞİ === -->
+<script>
+$(document).ready(function() {
+    // Bu kodun sadece sidebarToggleBtn ID'li bir buton varsa çalışmasını sağlıyoruz
+    var sidebarToggleButton = $('#sidebarToggleBtn');
+    
+    if (sidebarToggleButton.length > 0) {
+        
+        // Hamburger butonuna tıklandığında menüyü aç/kapat
+        sidebarToggleButton.on('click', function(e) {
+            e.stopPropagation(); // Tıklamanın diğer elementlere yayılmasını engelle
+            $('.main-wrapper').toggleClass('sidebar-toggled');
+        });
+
+        // Ana içerik alanına tıklandığında menüyü kapat
+        $('.main-content').on('click', function() {
+            // Eğer menü zaten açıksa
+            if ($('.main-wrapper').hasClass('sidebar-toggled')) {
+                // menüyü kapat
+                $('.main-wrapper').removeClass('sidebar-toggled');
+            }
+        });
+    }
+});
+<!-- === MOBİL MENÜ KAPATMA İŞLEVSELLİĞİ === -->
+<script>
+$(document).ready(function() {
+    // Bu kodun sadece sidebarToggleBtn ID'li bir buton varsa çalışmasını sağlıyoruz
+    var sidebarToggleButton = $('#sidebarToggleBtn');
+    
+    if (sidebarToggleButton.length > 0) {
+        
+        // Hamburger butonuna tıklandığında menüyü aç/kapat
+        sidebarToggleButton.on('click', function(e) {
+            e.stopPropagation(); // Tıklamanın diğer elementlere yayılmasını engelle
+            $('.main-wrapper').toggleClass('sidebar-toggled');
+        });
+
+        // Ana içerik alanına tıklandığında menüyü kapat
+        $('.main-content').on('click', function() {
+            // Eğer menü zaten açıksa
+            if ($('.main-wrapper').hasClass('sidebar-toggled')) {
+                // menüyü kapat
+                $('.main-wrapper').removeClass('sidebar-toggled');
+            }
+        });
+    }
+});
+</script>
+<!-- === YENİ VE DÜZELTİLMİŞ MOBİL MENÜ SCRİPTİ === -->
+    <script>
+    $(document).ready(function() {
+        // Gerekli elemanları seç
+        var toggleBtn = $('.mobile-menu-toggle');
+        var sidebar = $('.sidebar');
+        var mainWrapper = $('.main-wrapper');
+
+        // Hamburger butonuna tıklandığında menüyü aç/kapat
+        toggleBtn.on('click', function(e) {
+            e.stopPropagation(); // Tıklamanın diğer elementlere yayılmasını engelle
+            sidebar.toggleClass('open');
+            mainWrapper.toggleClass('sidebar-open');
+        });
+
+        // Ana içerik alanına (menü dışındaki boşluğa) tıklandığında menüyü kapat
+        $('.main-content').on('click', function() {
+            // Eğer menü açıksa
+            if (sidebar.hasClass('open')) {
+                sidebar.removeClass('open');
+                mainWrapper.removeClass('sidebar-open');
+            }
+        });
+    });
+    </script>
+
 </body>
 </html>

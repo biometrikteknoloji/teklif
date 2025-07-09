@@ -71,6 +71,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 $stmt_customers = $pdo->query("SELECT id, unvan as text, yetkili_ismi FROM customers ORDER BY unvan ASC");
 $customers = $stmt_customers->fetchAll(PDO::FETCH_ASSOC);
 
+// === EKLENECEK KOD: ŞABLONLARI ÇEK ===
+$stmt_templates = $pdo->query("SELECT id, template_name as text FROM proposal_templates ORDER BY template_name ASC");
+$templates = $stmt_templates->fetchAll(PDO::FETCH_ASSOC);
+
 include 'partials/header.php';
 ?>
 <div class="main-wrapper">
@@ -79,12 +83,23 @@ include 'partials/header.php';
         <div class="topbar">
             <div class="user-info">Hoş Geldin, <strong><?php echo htmlspecialchars($_SESSION['user_name'] ?? 'Misafir'); ?></strong>!</div>
         </div>
+		                    <!-- === EKLENECEK KOD: ŞABLON SEÇİMİ === -->
+                    <div class="col-md-4">
+                        <label for="template_id" class="form-label">Şablondan Yükle (İsteğe Bağlı)</label>
+                        <select class="form-control" id="template_id">
+                            <option></option> <!-- Select2 placeholder için boş option -->
+                            <?php foreach($templates as $template): ?>
+                                <option value="<?php echo $template['id']; ?>"><?php echo htmlspecialchars($template['text']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
         <div class="page-content">
             <h1>Yeni Teklif Oluştur</h1>
             <form action="teklif_olustur.php" method="POST" id="teklifFormu">
                 <div class="row mb-3">
                     <div class="col-md-5"><label for="customer_id" class="form-label">Müşteri Seçin (*)</label><select class="form-control" id="customer_id" name="customer_id" required></select></div>
-                    <div class="col-md-4"><label for="subject" class="form-label">Teklif Konusu</label><input type="text" class="form-control" id="subject" name="subject" placeholder="Örn: Ofis Malzemeleri Alımı"></div>
+                    
+					<div class="col-md-4"><label for="subject" class="form-label">Teklif Konusu</label><input type="text" class="form-control" id="subject" name="subject" placeholder="Örn: Ofis Malzemeleri Alımı"></div>
                     <div class="col-md-3"><label for="proposal_date" class="form-label">Teklif Tarihi</label><input type="date" class="form-control" id="proposal_date" name="proposal_date" value="<?php echo date('Y-m-d'); ?>"></div>
                 </div>
                 <div class="row mb-4">

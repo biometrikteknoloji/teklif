@@ -1,27 +1,24 @@
 <?php
-// Oturumu başlatmalıyız ki sonlandırabilelim.
 session_start();
 
-// Hata ayıklama için ekrana bilgi basalım.
-echo "Çıkış işlemi başlatıldı...<br>";
-echo "Önceki Oturum Bilgileri: <pre>";
-print_r($_SESSION);
-echo "</pre>";
+// Veritabanından token'ı temizle (opsiyonel ama daha güvenli)
+if (isset($_SESSION['user_id'])) {
+    require 'config/database.php';
+    $stmt = $pdo->prepare("UPDATE users SET remember_token = NULL WHERE id = ?");
+    $stmt->execute([$_SESSION['user_id']]);
+}
 
-// Tüm oturum değişkenlerini temizle.
-session_unset();
-echo "Oturum değişkenleri (session_unset) temizlendi.<br>";
-
-// Oturumu tamamen yok et.
+// Session'ı yok et
+$_SESSION = array();
 session_destroy();
-echo "Oturum (session_destroy) yok edildi.<br>";
 
-echo "<hr>";
-echo "Şimdi giriş sayfasına yönlendiriliyorsunuz...";
+// Çerezi sil
+if (isset($_COOKIE['remember_user_token'])) {
+    unset($_COOKIE['remember_user_token']); 
+    setcookie('remember_user_token', '', time() - 3600, '/');
+}
 
-// Kullanıcıyı tekrar giriş sayfasına yönlendir.
-header('Location: login.php');
-
-// Yönlendirmeden sonra başka bir kodun çalışmasını engelle.
-exit();
+// Giriş sayfasına yönlendir
+header("location: login.php");
+exit;
 ?>
