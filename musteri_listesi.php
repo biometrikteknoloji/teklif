@@ -1,45 +1,84 @@
 <?php
 session_start();
-
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit();
 }
-
 require 'config/database.php';
 
-$stmt = $pdo->query("SELECT * FROM customers ORDER BY unvan ASC");
+// === FİLTRELEME İÇİN VERİLERİ ALMA ===
+$search_term = $_GET['search'] ?? '';
+$search_type = $_GET['type'] ?? '';
+
+// === ANA SORGUYU FİLTRELERLE BİRLİKTE OLUŞTURMA ===
+$sql = "
+    SELECT c.*, co.country_name, ci.city_name 
+    FROM customers c
+    LEFT JOIN countries co ON c.country_id = co.id
+    LEFT JOIN cities ci ON c.city_id = ci.id
+    WHERE 1=1 
+";
+$params = [];
+
+if (!empty($search_term)) {
+    $sql .= " AND (c.unvan LIKE ? OR c.yetkili_ismi LIKE ? OR c.email LIKE ?)";
+    $params[] = "%$search_term%";
+    $params[] = "%$search_term%";
+    $params[] = "%$search_term%";
+}
+
+if (!empty($search_type)) {
+    $sql .= " AND c.customer_type = ?";
+    $params[] = $search_type;
+}
+
+$sql .= " ORDER BY c.unvan ASC";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute($params);
 $musteriler = $stmt->fetchAll();
 
 include 'partials/header.php';
 ?>
 
 <div class="main-wrapper">
-    
     <?php include 'partials/sidebar.php'; ?>
-
     <div class="main-content">
         <div class="topbar">
-            <div class="user-info">
-                Hoş Geldin, <strong><?php echo htmlspecialchars($_SESSION['user_name'] ?? 'Misafir'); ?></strong>!
-            </div>
+            <!-- ... topbar içeriği ... -->
         </div>
-
         <div class="page-content">
-            
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1>Müşteri Listesi</h1>
-                <?php if ($_SESSION['user_role_id'] == 1): // Sadece Admin görebilir ?>
-                  <!-- === DEĞİŞTİRİLECEK KOD BLOĞU === -->
-<div class="btn-group">
-    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#importExcelModal">
-        <i class="fas fa-file-import me-2"></i>Excel'den İçe Aktar
-    </button>
-    <a href="musteri_ekle.php" class="btn btn-success">
-        <i class="fas fa-plus me-2"></i>Yeni Müşteri Ekle
-    </a>
-</div>
+                <?php if ($_SESSION['user_role_id'] == 1): ?>
+                  <a href="musteri_form.php" class="btn btn-success"><i class="fas fa-plus me-2"></i>Yeni Müşteri Ekle</a>
                 <?php endif; ?>
+            </div>
+
+            <!-- === FİLTRELEME FORMU === -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <form method="GET" class="row g-3 align-items-end">
+                        <div class="col-md-5">
+                            <label for="search" class="form-label">Arama Yap</label>
+                            <input type="text" class="form-control" id="search" name="search" placeholder="Müşteri adı, yetkili, e-posta..." value="<?php echo htmlspecialchars($search_term); ?>">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="type" class="form-label">Müşteri Tipi</label>
+                            <select id="type" name="type" class="form-select">
+                                <option value="">Tümü</option>
+                                <option value="Bayi" <?php if($search_type == 'Bayi') echo 'selected'; ?>>Bayi</option>
+                                <option value="Son Kullanıcı" <?php if($search_type == 'Son Kullanıcı') echo 'selected'; ?>>Son Kullanıcı</option>
+                                <option value="Proje Firması" <?php if($search_type == 'Proje Firması') echo 'selected'; ?>>Proje Firması</option>
+                                <option value="Diğer" <?php if($search_type == 'Diğer') echo 'selected'; ?>>Diğer</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-primary w-100">Filtrele</button>
+                            <a href="musteri_listesi.php" class="btn btn-secondary w-100 mt-2">Temizle</a>
+                        </div>
+                    </form>
+                </div>
             </div>
 
             <div class="table-responsive">
@@ -47,7 +86,8 @@ include 'partials/header.php';
                     <thead class="table-dark">
                         <tr>
                             <th>Ünvan</th>
-                            <th>Yetkili İsmi</th>
+                            <th>Müşteri Tipi</th>
+                            <th>Ülke / Şehir</th>
                             <th>Email</th>
                             <th>Telefon</th>
                             <th class="text-center" style="width: 120px;">İşlemler</th>
@@ -58,69 +98,28 @@ include 'partials/header.php';
                             <?php foreach ($musteriler as $musteri): ?>
                                 <tr>
                                     <td><?php echo htmlspecialchars($musteri['unvan']); ?></td>
-                                    <td><?php echo htmlspecialchars($musteri['yetkili_ismi']); ?></td>
+                                    <td><span class="badge bg-info"><?php echo htmlspecialchars($musteri['customer_type']); ?></span></td>
+                                    <td><?php echo htmlspecialchars($musteri['country_name'] ?? '-'); ?> / <?php echo htmlspecialchars($musteri['city_name'] ?? '-'); ?></td>
                                     <td><?php echo htmlspecialchars($musteri['email']); ?></td>
                                     <td><?php echo htmlspecialchars($musteri['telefon']); ?></td>
-                                    <td class="text-center action-buttons">
-                                        <?php if ($_SESSION['user_role_id'] == 1): // Sadece Admin görebilir ?>
-                                            <a href="musteri_duzenle.php?id=<?php echo $musteri['id']; ?>" class="action-icon" data-bs-toggle="tooltip" title="Düzenle">
-                                                <i class="fas fa-pencil-alt text-primary"></i>
-                                            </a>
-                                            <a href="musteri_sil.php?id=<?php echo $musteri['id']; ?>" class="action-icon" onclick="return confirm('Bu müşteriyi silmek istediğinizden emin misiniz?');" data-bs-toggle="tooltip" title="Sil">
-                                                <i class="fas fa-trash-alt text-danger"></i>
-                                            </a>
-                                        <?php else: ?>
-                                            -
+                                    <td class="text-center">
+                                        <?php if ($_SESSION['user_role_id'] == 1): ?>
+                                            <a href="musteri_form.php?id=<?php echo $musteri['id']; ?>" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a>
+                                            <a href="musteri_sil.php?id=<?php echo $musteri['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Bu müşteriyi silmek istediğinizden emin misiniz?');"><i class="fas fa-trash"></i></a>
                                         <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="5" class="text-center p-4">Henüz kayıtlı müşteri bulunmuyor.</td>
+                                <td colspan="6" class="text-center p-4">Arama kriterlerinize uygun müşteri bulunamadı.</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
             </div>
-
-        </div>
-		<!-- === SAYFA SONUNA EKLENECEK KOD === -->
-
-<!-- 1. Modal Penceresinin HTML Kodu -->
-<div class="modal fade" id="importExcelModal" tabindex="-1" aria-labelledby="importExcelModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="importExcelModalLabel">Excel'den Müşteri Aktar</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="import_customers.php" method="POST" enctype="multipart/form-data">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="excelFile" class="form-label">Excel Dosyası (.xlsx)</label>
-                        <input class="form-control" type="file" id="excelFile" name="excelFile" accept=".xlsx" required>
-                    </div>
-                    <div class="alert alert-info">
-                        <strong>Önemli:</strong> Yükleyeceğiniz Excel dosyasının ilk satırı başlık olmalı ve sırasıyla şu sütunları içermelidir:
-                        <br><code>unvan</code>, <code>adres</code>, <code>telefon</code>, <code>vergi_dairesi</code>, <code>vergi_no</code>, <code>email</code>, <code>cep_telefonu</code>, <code>yetkili_ismi</code>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
-                    <button type="submit" class="btn btn-primary">Yükle ve Aktar</button>
-                </div>
-            </form>
         </div>
     </div>
 </div>
 
-<!-- 2. Modal'ın Çalışması İçin Gerekli JavaScript Kütüphaneleri -->
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="assets/js/bootstrap.bundle.min.js"></script>
-    </div>
-</div>
-
-<?php
-include 'partials/footer.php'; 
-?>
+<?php include 'partials/footer.php'; ?>
