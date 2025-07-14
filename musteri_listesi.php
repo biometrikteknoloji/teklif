@@ -51,7 +51,7 @@ include 'partials/header.php';
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1>Müşteri Listesi</h1>
                 <?php if ($_SESSION['user_role_id'] == 1): ?>
-                  <a href="musteri_form.php" class="btn btn-success"><i class="fas fa-plus me-2"></i>Yeni Müşteri Ekle</a>
+                  <a href="musteri_ekle.php" class="btn btn-success"><i class="fas fa-plus me-2"></i>Yeni Müşteri Ekle</a>
                 <?php endif; ?>
             </div>
 
@@ -104,7 +104,7 @@ include 'partials/header.php';
                                     <td><?php echo htmlspecialchars($musteri['telefon']); ?></td>
                                     <td class="text-center">
                                         <?php if ($_SESSION['user_role_id'] == 1): ?>
-                                            <a href="musteri_form.php?id=<?php echo $musteri['id']; ?>" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a>
+                                            <a href="musteri_duzenle.php?id=<?php echo $musteri['id']; ?>" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Düzenle"><i class="fas fa-edit"></i></a>
                                             <a href="musteri_sil.php?id=<?php echo $musteri['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Bu müşteriyi silmek istediğinizden emin misiniz?');"><i class="fas fa-trash"></i></a>
                                         <?php endif; ?>
                                     </td>

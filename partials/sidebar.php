@@ -34,6 +34,11 @@ if (isset($pdo)) {
                 <i class="fas fa-users"></i> Müşteriler
             </a>
         </li>
+		        <li>
+            <a href="proforma_listesi.php" class="<?php echo (in_array($current_page, ['proforma_listesi.php', 'proforma_form.php'])) ? 'active' : ''; ?>">
+                <i class="fas fa-globe-americas"></i> Proforma
+            </a>
+        </li>
         <li>
             <a href="urun_listesi.php" class="<?php echo (in_array($current_page, ['urun_listesi.php', 'urun_ekle.php', 'urun_duzenle.php'])) ? 'active' : ''; ?>">
                 <i class="fas fa-box-open"></i> Ürünler
