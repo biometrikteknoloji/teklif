@@ -1,4 +1,5 @@
 <?php
+
 session_start();
 if (!isset($_SESSION['user_id'])) { exit('Bu işlemi yapmak için giriş yapmalısınız.'); }
 

@@ -1,4 +1,5 @@
 <?php
+// DEĞİŞTİ: Bu dosya artık Yurt Dışı Müşteri eklemek içindir.
 require 'core/functions.php';
 session_start();
 if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit(); }
@@ -7,35 +8,40 @@ require 'config/database.php';
 
 $error_message = '';
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // DEĞİŞTİ: Vergi alanları artık formdan gelmiyor, bu yüzden kaldırıldı.
     $unvan = trim($_POST['unvan']);
     $adres = trim($_POST['adres']);
     $telefon = trim($_POST['telefon']);
-    $vergi_dairesi = trim($_POST['vergi_dairesi']);
-    $vergi_no = trim($_POST['vergi_no']) ?: null;
     $email = trim($_POST['email']);
     $cep_telefonu = trim($_POST['cep_telefonu']);
     $yetkili_ismi = trim($_POST['yetkili_ismi']);
-    // === YENİ ALANLAR ===
     $country_id = $_POST['country_id'] ?: null;
     $city_id = $_POST['city_id'] ?: null;
     $customer_type = $_POST['customer_type'];
     
-    try {
-        $sql = "INSERT INTO customers (unvan, adres, telefon, vergi_dairesi, vergi_no, email, cep_telefonu, yetkili_ismi, country_id, city_id, customer_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        $stmt = $pdo->prepare($sql);
-// YENİ: market_type sütunu eklendi ve değeri 'Yurt İçi' olarak sabitlendi.
-$sql = "INSERT INTO customers (unvan, market_type, adres, telefon, vergi_dairesi, vergi_no, email, cep_telefonu, yetkili_ismi, country_id, city_id, customer_type) VALUES (?, 'Yurt İçi', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-$stmt = $pdo->prepare($sql);
-// YENİ: execute dizisinden market_type kaldırıldı çünkü sorguya sabit olarak eklendi.
-$stmt->execute([$unvan, $adres, $telefon, $vergi_dairesi, $vergi_no, $email, $cep_telefonu, $yetkili_ismi, $country_id, $city_id, $customer_type]);
-        add_log($pdo, 'YENİ MÜŞTERİ EKLENDİ', 'Müşteri Ünvanı: ' . $unvan);
-        header("Location: musteri_listesi.php?status=success");
-        exit();
-    } catch (PDOException $e) {
-        if ($e->getCode() == 23000) {
-             $error_message = "Bu vergi numarası veya e-posta adresi zaten kayıtlı.";
-        } else {
-             $error_message = "HATA: Kayıt işlemi başarısız. " . $e->getMessage();
+    // Yurt dışı müşteriler için ülke seçimi zorunlu olmalı.
+    if (empty($country_id)) {
+        $error_message = "Lütfen müşterinin ülkesini seçin.";
+    } else {
+        try {
+            // DEĞİŞTİ: SQL sorgusu Yurt Dışı'na göre güncellendi.
+            // 'market_type' => 'Yurt Dışı' olarak sabitlendi.
+            // vergi_dairesi ve vergi_no sütunları sorgudan kaldırıldı.
+            $sql = "INSERT INTO customers (unvan, market_type, adres, telefon, email, cep_telefonu, yetkili_ismi, country_id, city_id, customer_type) VALUES (?, 'Yurt Dışı', ?, ?, ?, ?, ?, ?, ?, ?)";
+            $stmt = $pdo->prepare($sql);
+            // DEĞİŞTİ: execute dizisi yeni sorguya göre güncellendi.
+            $stmt->execute([$unvan, $adres, $telefon, $email, $cep_telefonu, $yetkili_ismi, $country_id, $city_id, $customer_type]);
+            
+            add_log($pdo, 'YENİ YURT DIŞI MÜŞTERİ EKLENDİ', 'Müşteri Ünvanı: ' . $unvan);
+            // DEĞİŞTİ: Başarılı kayıt sonrası Yurt Dışı listesine yönlendiriyoruz.
+            header("Location: musteri_listesi.php?market=yurt_disi&status=success");
+            exit();
+        } catch (PDOException $e) {
+            if ($e->getCode() == 23000) {
+                 $error_message = "Bu e-posta adresi zaten kayıtlı.";
+            } else {
+                 $error_message = "HATA: Kayıt işlemi başarısız. " . $e->getMessage();
+            }
         }
     }
 }
@@ -52,14 +58,16 @@ include 'partials/header.php';
             <div class="user-info">Hoş Geldin, <strong><?php echo htmlspecialchars($_SESSION['user_name'] ?? 'Misafir'); ?></strong>!</div>
         </div>
         <div class="page-content">
-            <h1>Yeni Müşteri Ekle</h1>
-            <p class="lead">Lütfen yeni müşteri bilgilerini eksiksiz girin.</p>
+            <!-- DEĞİŞTİ: Sayfa başlığı güncellendi. -->
+            <h1>Yeni Yurt Dışı Müşteri Ekle</h1>
+            <p class="lead">Lütfen yeni yurt dışı müşteri bilgilerini eksiksiz girin.</p>
 
             <?php if ($error_message): ?>
                 <div class="alert alert-danger"><?php echo $error_message; ?></div>
             <?php endif; ?>
 
-            <form action="musteri_ekle.php" method="POST">
+            <!-- DEĞİŞTİ: Formun action'ı kendine yönlendirildi. -->
+            <form action="musteri_ekle_yurtdisi.php" method="POST">
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label for="unvan" class="form-label">Firma Ünvanı (*)</label>
@@ -71,7 +79,6 @@ include 'partials/header.php';
                     </div>
                 </div>
 
-                <!-- === YENİ ALANLAR === -->
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label for="customer_type" class="form-label">Müşteri Tipi (*)</label>
@@ -82,9 +89,10 @@ include 'partials/header.php';
                             <option value="Diğer">Diğer</option>
                         </select>
                     </div>
+                    <!-- DEĞİŞTİ: Ülke alanı artık daha önemli ve zorunlu. -->
                     <div class="col-md-4 mb-3">
-                        <label for="country_id" class="form-label">Ülke</label>
-                        <select class="form-select" id="country_id" name="country_id">
+                        <label for="country_id" class="form-label">Ülke (*)</label>
+                        <select class="form-select" id="country_id" name="country_id" required>
                             <option value="">Seçiniz...</option>
                             <?php foreach($countries as $country): ?>
                                 <option value="<?php echo $country['id']; ?>"><?php echo htmlspecialchars($country['country_name']); ?></option>
@@ -117,26 +125,20 @@ include 'partials/header.php';
                         <input type="text" class="form-control" id="cep_telefonu" name="cep_telefonu">
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="vergi_dairesi" class="form-label">Vergi Dairesi</label>
-                        <input type="text" class="form-control" id="vergi_dairesi" name="vergi_dairesi">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="vergi_no" class="form-label">Vergi Numarası</label>
-                        <input type="text" class="form-control" id="vergi_no" name="vergi_no">
-                    </div>
-                </div>
+                
+                <!-- DEĞİŞTİ: Vergi Dairesi ve Vergi No alanları buradan tamamen kaldırıldı. -->
+                
                 <hr class="my-4">
                 <button type="submit" class="btn btn-primary">Kaydet</button>
-                <a href="musteri_listesi.php" class="btn btn-secondary">Vazgeç</a>
+                <!-- DEĞİŞTİ: Vazgeç butonu Yurt Dışı listesine yönlendiriyor. -->
+                <a href="musteri_listesi.php?market=yurt_disi" class="btn btn-secondary">Vazgeç</a>
             </form>
         </div>
     </div>
 </div>
 
 <?php include 'partials/footer.php'; ?>
-<!-- Dinamik şehir seçimi için JavaScript -->
+<!-- Dinamik şehir seçimi için JavaScript (Aynen kalıyor) -->
 <script>
 $(document).ready(function() {
     $('#country_id').on('change', function() {
@@ -159,11 +161,11 @@ $(document).ready(function() {
                         citySelect.append($('<option>', { value: city.id, text: city.city_name }));
                     });
                 } else {
-                    citySelect.html('<option value="">Bu ülkeye ait şehir bulunamadı</option>');
+                    citySelect.prop('disabled', false).html('<option value="">Bu ülkeye ait şehir bulunamadı</option>');
                 }
             },
             error: function() {
-                citySelect.html('<option value="">Şehirler getirilemedi!</option>');
+                citySelect.prop('disabled', false).html('<option value="">Hata: Şehirler alınamadı!</option>');
             }
         });
     });
