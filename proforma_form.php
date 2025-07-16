@@ -187,6 +187,8 @@ include 'partials/header.php';
 <?php include 'partials/footer.php'; ?>
 
 <!-- Nihai JavaScript Bloğu -->
+<!-- proforma_form.php'nin en altına eklenecek -->
+<!-- proforma_form.php'nin en altına eklenecek -->
 <script>
 $(document).ready(function () {
     let itemIndex = <?php echo !empty($proforma_items) ? count($proforma_items) : 0; ?>;
@@ -195,7 +197,7 @@ $(document).ready(function () {
     // Müşteri arama kutusunu başlat
     $('#customer_id').select2({ theme: 'bootstrap-5', placeholder: 'Müşteri seçin veya arayın...' });
 
-    // Mevcut satırlardaki ürün arama kutularını başlat
+    // Mevcut (düzenleme modunda gelen) satırlardaki ürün arama kutularını başlat
     $('#proformaItems .product-select').each(function() {
         initializeProductSelect(this);
     });
@@ -221,10 +223,9 @@ $(document).ready(function () {
         itemIndex++;
     });
 
-    // Silme butonu için olay dinleyici
+    // Silme butonu
     proformaItemsTbody.on('click', '.removeItemBtn', function() {
         $(this).closest('tr').remove();
-        calculateTotals();
     });
 
     // Ürün arama kutusunu başlatan fonksiyon
@@ -234,7 +235,7 @@ $(document).ready(function () {
             placeholder: 'Ürün ara...',
             minimumInputLength: 1,
             ajax: {
-                url: 'api_search_products.php',
+                url: 'api_search_products.php', // Bu dosyanın doğru çalıştığından emin olmalıyız
                 dataType: 'json',
                 delay: 250,
                 data: function(params) {
@@ -253,34 +254,6 @@ $(document).ready(function () {
         let row = $(this).closest('tr');
         row.find('textarea[name$="[description]"]').val(data.urun_aciklamasi || '');
         row.find('.unit-price').val(data.price || '0.00');
-        calculateRowTotal(row);
-        calculateTotals();
     });
-
-    // Hesaplama fonksiyonları...
-    function calculateRowTotal(row) {
-        let quantity = parseFloat(row.find('.quantity').val()) || 0;
-        let unitPrice = parseFloat(row.find('.unit-price').val()) || 0;
-        row.find('.total-price').val((quantity * unitPrice).toFixed(2));
-    }
-    
-    function calculateTotals() {
-        let subTotal = 0;
-        $('#proformaItems tr').each(function() {
-            subTotal += parseFloat($(this).find('.total-price').val()) || 0;
-        });
-        $('#subTotalDisplay').text(subTotal.toFixed(2));
-    }
-    
-    proformaItemsTbody.on('input', '.quantity, .unit-price', function() {
-        calculateRowTotal($(this).closest('tr'));
-        calculateTotals();
-    });
-
-    // Sayfa ilk yüklendiğinde mevcut kalemlerin toplamlarını hesapla
-    $('#proformaItems tr').each(function() {
-        calculateRowTotal($(this));
-    });
-    calculateTotals();
 });
 </script>
